@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="六合常中"/>
 <meta name="theme-color" content="#e91e63"/>
 <title>六合常中 🎱</title>
-<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js" crossorigin></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{overflow-x:hidden;}
@@ -23,12 +23,21 @@ input,button,select,textarea{font-family:inherit;-webkit-appearance:none;}
 </head>
 <body>
 <div id="loading" style="position:fixed;inset:0;background:linear-gradient(135deg,#e91e63,#ff6090);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:system-ui">
-  <div style="font-size:56px;margin-bottom:16px;animation:spin 2s linear infinite">🎱</div>
+  <div style="font-size:56px;margin-bottom:16px">🎱</div>
   <div style="color:#fff;font-size:18px;font-weight:900;letter-spacing:1px">六合常中</div>
-  <div style="color:rgba(255,255,255,.7);font-size:12px;margin-top:8px">載入中...</div>
+  <div style="color:rgba(255,255,255,.7);font-size:12px;margin-top:8px" id="load-status">載入中...</div>
+  <div id="load-retry" style="display:none;margin-top:20px"><button onclick="location.reload()" style="background:#fff;color:#e91e63;border:none;padding:12px 28px;border-radius:20px;font-size:15px;font-weight:800;cursor:pointer">🔄 重新載入</button></div>
 </div>
-<style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
 <div id="root"></div>
+<script>
+setTimeout(function(){
+  var l=document.getElementById('loading');
+  if(l&&l.style.display!=='none'){
+    document.getElementById('load-status').textContent='載入超時，請點擊重試';
+    document.getElementById('load-retry').style.display='block';
+  }
+},15000);
+</script>
 <script type="text/babel">
 const {useState,useEffect,useRef,useMemo} = React;
 
