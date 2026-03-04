@@ -663,7 +663,9 @@ function render(){
 
 // ═══ LATEST ═══
 function renderLatest(){
+  console.log('renderLatest called, hist length:', hist.length);
   const l=hist[0],nd=calcNextDraw(),cd=getCountdown();
+  console.log('l:', l, 'nd:', nd);
   const PRESETS=[8e6,3e7,5e7,1e8,1.5e8,2e8];
   const PLABELS=['$800萬','$3千萬','$5千萬','$1億','$1.5億','$2億'];
   return `
@@ -1246,6 +1248,8 @@ window.onerror = function(msg, src, line, col, err) {
 try {
   updateHeader();
   initLucky();
+  // Test: write directly to content first
+  document.getElementById('content').innerHTML = '<div style="padding:20px;color:green;font-size:16px;font-weight:bold">✅ JS IS WORKING!<br/>Now calling render()...</div>';
   render();
 } catch(e) {
   const c = document.getElementById('content');
