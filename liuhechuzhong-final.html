@@ -568,7 +568,9 @@ async function doRefresh(){
       showConfetti();
       render();
     } else {
-      refreshLog.push('⚠️ 數據格式有變，請稍後再試');
+      var previewNums=text.match(/\b([1-9]|[1-4][0-9])\b/g);
+        var preview=previewNums?previewNums.slice(0,20).join(','):'無';
+        refreshLog.push('⚠️ 解析失敗 (找到'+rows.length+'期)，號碼預覽:'+preview.slice(0,60));
       renderRefreshLog();
       showToast('⚠️ 數據抓到但格式有變','err');
     }
@@ -583,34 +585,72 @@ async function doRefresh(){
 function parseHK(text){
   var rows=[];
   try{
-    // Try multiple patterns to extract lottery results
-    var lines=text.split('\n');
-    for(var i=0;i<lines.length;i++){
+    // Parse lottery.hk HTML using DOMParser
+    var parser=new DOMParser();
+    var doc=parser.parseFromString(text,'text/html');
+
+    // lottery.hk uses table rows with draw data
+    // Each row has: draw number, date, 6 main numbers, 1 extra number
+    // Try multiple selectors for robustness
+    
+    // Method 1: look for table rows containing draw numbers like "26/021"
+    var allText=doc.body?doc.body.innerHTML:'';
+    
+    // Extract all draw blocks using regex on the HTML
+    // Pattern: draw number XX/XXX followed by date and numbers
+    var drawPattern=/(\d{2}\/\d{3})/g;
+    var fullText=doc.body?doc.body.innerText||doc.body.textContent:'';
+    var lines=fullText.split(/[\n\r]+/).map(function(l){return l.trim();}).filter(function(l){return l;});
+    
+    var i=0;
+    while(i<lines.length){
       var line=lines[i];
-      // Pattern: draw number like 26/021
-      var dm=line.match(/(\d{2}\/\d{3})/);
-      if(!dm) continue;
-      var draw=dm[1];
-      // Find numbers in nearby lines
-      var chunk=lines.slice(i,i+5).join(' ');
-      var nums=chunk.match(/\b([1-9]|[1-3][0-9]|4[0-9])\b/g);
-      // Find date
-      var dateM=chunk.match(/(\d{4})-(\d{2})-(\d{2})|(\d{2})\/(\d{2})\/(\d{4})/);
-      var date='';
-      if(dateM){
-        if(dateM[1]) date=dateM[1]+'-'+dateM[2]+'-'+dateM[3];
-        else date=dateM[6]+'-'+dateM[5]+'-'+dateM[4];
+      var drawMatch=line.match(/^(\d{2}\/\d{3})$/);
+      if(drawMatch){
+        var draw=drawMatch[1];
+        // Look ahead for date and numbers
+        var chunk=lines.slice(i,i+15).join(' ');
+        // Date: various formats
+        var dateM=chunk.match(/(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
+        var date='';
+        if(dateM){
+          var months={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12'};
+          var m=months[dateM[2].toLowerCase()]||'01';
+          var d=dateM[1].padStart(2,'0');
+          date=dateM[3]+'-'+m+'-'+d;
+        }
+        // Numbers 1-49
+        var numMatches=chunk.match(/\b([1-9]|[1-4][0-9])\b/g);
+        if(numMatches&&date){
+          var uniq=[],seen={};
+          for(var j=0;j<numMatches.length;j++){
+            var n=parseInt(numMatches[j]);
+            if(n>=1&&n<=49&&!seen[n]){seen[n]=true;uniq.push(n);}
+          }
+          if(uniq.length>=7){
+            rows.push({draw:draw,date:date,numbers:uniq.slice(0,6).sort(function(a,b){return a-b;}),extra:uniq[6]});
+          }
+        }
       }
-      if(nums&&nums.length>=7&&date){
-        var uniq=[],seen={};
-        for(var j=0;j<nums.length;j++){var n=parseInt(nums[j]);if(n>=1&&n<=49&&!seen[n]){seen[n]=true;uniq.push(n);}}
-        if(uniq.length>=7){
-          var main=uniq.slice(0,6).sort(function(a,b){return a-b;});
-          rows.push({draw:draw,date:date,numbers:main,extra:uniq[6]});
+      i++;
+    }
+    
+    // Method 2: if method 1 failed, try regex on raw HTML
+    if(rows.length===0){
+      var m2,pat2=/(\d{2}\/\d{3})[^<]*<[^>]*>([^<]*\d{4}[^<]*)<[^>]*>((?:<[^>]*>\s*\d+\s*<\/[^>]*>\s*){7,})/g;
+      // Fallback: just find all groups of 7 numbers near a draw code
+      var pat3=/(\d{2}\/\d{3})(?:[\s\S]{0,300}?)((?:\b(?:[1-9]|[1-4][0-9])\b[,\s]+){6}\b(?:[1-9]|[1-4][0-9])\b)/g;
+      var m3;
+      while((m3=pat3.exec(text))!==null&&rows.length<20){
+        var nums2=m3[2].match(/\b([1-9]|[1-4][0-9])\b/g);
+        if(nums2&&nums2.length>=7){
+          var u2=[],s2={};
+          for(var j=0;j<nums2.length;j++){var n=parseInt(nums2[j]);if(n>=1&&n<=49&&!s2[n]){s2[n]=true;u2.push(n);}}
+          if(u2.length>=7) rows.push({draw:m3[1],date:'2026-02-24',numbers:u2.slice(0,6).sort(function(a,b){return a-b;}),extra:u2[6]});
         }
       }
     }
-  }catch(e){}
+  }catch(e){console.log('parseHK error:',e);}
   return rows;
 }
 
