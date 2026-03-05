@@ -294,7 +294,10 @@ async function doRefresh(){
   refreshLog=['🔄 連接 Cloudflare Worker...'];
   renderRefreshLog();
   try{
-    const res=await fetch(WORKER_URL,{signal:AbortSignal.timeout(15000)});
+    const _ctrl=new AbortController();
+    const _timer=setTimeout(()=>_ctrl.abort(),15000);
+    const res=await fetch(WORKER_URL,{signal:_ctrl.signal});
+    clearTimeout(_timer);
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     refreshLog.push('✅ 連接成功，解析數據...');
     renderRefreshLog();
