@@ -573,8 +573,10 @@ function doRefresh(){
             showConfetti();
           } else {
             // Show raw HTML snippet for diagnosis
-            var snippet=text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,200);
-            refreshLog=['⚠️ 解析失敗','📄 原始內容: '+snippet];
+            // Show what draw numbers were found
+            var drawsFound=(text.match(/\b\d{2}\/\d{3}\b/g)||[]).slice(0,5).join(', ');
+            var datesFound=(text.match(/\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi)||[]).slice(0,3).join(' | ');
+            refreshLog=['⚠️ 解析失敗','🔢 期號: '+drawsFound,'📅 日期: '+datesFound];
             showToast('⚠️ 解析失敗','err');
           }
         }catch(e){
@@ -592,42 +594,59 @@ function doRefresh(){
 function parseHK(text){
   var rows=[];
   try{
-    var parser=new DOMParser();
-    var doc=parser.parseFromString(text,'text/html');
-    var body=doc.body;
-    if(!body) return rows;
-    var fullText=body.textContent||body.innerText||'';
+    // Strip all HTML tags to get plain text
+    var plain=text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
+                  .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
+                  .replace(/<[^>]+>/g,' ')
+                  .replace(/&nbsp;/g,' ')
+                  .replace(/&amp;/g,'&')
+                  .replace(/\s+/g,' ');
     
-    // Split into lines, find draw numbers like "26/021"
-    var lines=fullText.replace(/\t/g,' ').split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+    // Find all draw numbers like 26/021
+    var drawRe=/\b(\d{2}\/\d{3})\b/g;
+    var m, draws=[];
+    while((m=drawRe.exec(plain))!==null) draws.push({draw:m[1],pos:m.index});
+    
+    // Remove duplicate draws (keep first occurrence)
+    var seen={}, uniqueDraws=[];
+    for(var i=0;i<draws.length;i++){
+      if(!seen[draws[i].draw]){seen[draws[i].draw]=true;uniqueDraws.push(draws[i]);}
+    }
     
     var MONTHS={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12'};
     
-    for(var i=0;i<lines.length&&rows.length<30;i++){
-      if(!/^\d{2}\/\d{3}$/.test(lines[i])) continue;
-      var draw=lines[i];
-      // Look at next 20 lines for date and numbers
-      var chunk=lines.slice(i+1,i+20).join(' ');
+    for(var i=0;i<uniqueDraws.length&&rows.length<30;i++){
+      var pos=uniqueDraws[i].pos;
+      var chunk=plain.slice(pos,pos+400);
       
-      // Find English date: "24 February 2026"
+      // Find date: "24 February 2026" or "2026-02-24"
+      var date='';
       var dm=chunk.match(/(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
-      if(!dm) continue;
-      var mon=MONTHS[dm[2].toLowerCase()];
-      var date=dm[3]+'-'+mon+'-'+dm[1].padStart(2,'0');
-      
-      // Find exactly 7 numbers 1-49 in the chunk
-      var found=[];
-      var seen={};
-      var parts=chunk.split(/[^0-9]+/);
-      for(var j=0;j<parts.length;j++){
-        if(!parts[j]) continue;
-        var n=parseInt(parts[j],10);
-        if(n>=1&&n<=49&&!seen[n]){seen[n]=true;found.push(n);}
-        if(found.length>=7) break;
+      if(dm){
+        date=dm[3]+'-'+MONTHS[dm[2].toLowerCase()]+'-'+dm[1].padStart(2,'0');
+      } else {
+        var dm2=chunk.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if(dm2) date=dm2[1]+'-'+dm2[2]+'-'+dm2[3];
       }
-      if(found.length>=7){
-        var main=found.slice(0,6).sort(function(a,b){return a-b;});
-        rows.push({draw:draw,date:date,numbers:main,extra:found[6]});
+      if(!date) continue;
+      
+      // Find 7 numbers 1-49, skip year numbers like 2026
+      var numRe=/\b([1-9]|[1-4][0-9])\b/g;
+      numRe.lastIndex=0;
+      var nums=[], seenN={}, nm;
+      while((nm=numRe.exec(chunk))!==null){
+        var n=parseInt(nm[1]);
+        if(n>=1&&n<=49&&!seenN[n]){seenN[n]=true;nums.push(n);}
+        if(nums.length>=7) break;
+      }
+      
+      if(nums.length>=7){
+        rows.push({
+          draw:uniqueDraws[i].draw,
+          date:date,
+          numbers:nums.slice(0,6).sort(function(a,b){return a-b;}),
+          extra:nums[6]
+        });
       }
     }
   }catch(e){}
