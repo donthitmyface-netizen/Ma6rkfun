@@ -545,53 +545,48 @@ function triggerAlarm(type){
 // ── Refresh ──
 let refreshLog = [];
 function doRefresh(){
-  refreshLog=['🔄 連接 Cloudflare Worker...'];
-  render(); // re-render to show "更新中..." button state
-  var refreshing=true;
-  
-  // Use XHR for better iOS compatibility
-  var xhr=new XMLHttpRequest();
-  var timer=setTimeout(function(){
-    if(refreshing){xhr.abort();refreshLog=['❌ 連接超時（15秒）','請檢查網絡或稍後再試'];render();}
-  },15000);
-  
-  xhr.onload=function(){
-    clearTimeout(timer);
-    refreshing=false;
-    if(xhr.status>=200&&xhr.status<300){
-      refreshLog.push('✅ 連接成功，解析數據...');
-      var text=xhr.responseText;
-      var rows=parseHK(text);
-      if(rows.length>0){
-        var merged=rows.concat(hist).filter(function(h,idx,arr){
-          return arr.findIndex(function(x){return x.draw===h.draw;})=== idx;
-        }).sort(function(a,b){return b.draw>a.draw?1:-1;});
-        hist=merged;
-        refreshLog.push('✅ 成功更新 '+rows.length+' 期');
-        refreshLog.push('📊 最新：'+merged[0].draw+'（'+merged[0].date+'）');
-        refreshLog.push('🎱 '+merged[0].numbers.join(',')+'  特：'+merged[0].extra);
-        showToast('✅ 更新成功！'+merged[0].draw,'ok',5000);
-        showConfetti();
-      } else {
-        var preview=(text.match(/([1-9]|[1-4][0-9])/g)||[]).slice(0,15).join(',');
-        refreshLog.push('⚠️ 解析失敗，號碼預覽：'+preview.slice(0,50));
-        showToast('⚠️ 數據抓到但解析失敗','err');
-      }
-    } else {
-      refreshLog.push('❌ HTTP錯誤：'+xhr.status);
-      showToast('❌ 更新失敗','err');
-    }
-    render();
-  };
-  xhr.onerror=function(){
-    clearTimeout(timer);
-    refreshing=false;
-    refreshLog=['❌ 網絡錯誤，請檢查連接'];
-    showToast('❌ 網絡錯誤','err');
-    render();
-  };
-  xhr.open('GET',WORKER_URL,true);
-  xhr.send();
+  refreshLog=['🔄 連接中...'];
+  render();
+  fetch(WORKER_URL)
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      refreshLog=['🔄 連接成功，接收數據...'];
+      renderRefreshLog();
+      return r.text();
+    })
+    .then(function(text){
+      refreshLog=['🔄 解析中 ('+Math.round(text.length/1024)+'KB)...'];
+      renderRefreshLog();
+      // Yield to browser before heavy parsing
+      setTimeout(function(){
+        try{
+          var rows=parseHK(text);
+          if(rows.length>0){
+            var seen={};
+            var merged=rows.concat(hist).filter(function(h){
+              if(seen[h.draw]) return false;
+              seen[h.draw]=true; return true;
+            }).sort(function(a,b){return b.draw>a.draw?1:-1;});
+            hist=merged;
+            refreshLog=['✅ 更新成功！共 '+rows.length+' 期','📊 最新：'+merged[0].draw+' ('+merged[0].date+')','🎱 '+merged[0].numbers.join(', ')+'  +特'+merged[0].extra];
+            showToast('✅ '+merged[0].draw+': '+merged[0].numbers.join(',')+'  特'+merged[0].extra,'ok',6000);
+            showConfetti();
+          } else {
+            // Show raw HTML snippet for diagnosis
+            var snippet=text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,200);
+            refreshLog=['⚠️ 解析失敗','📄 原始內容: '+snippet];
+            showToast('⚠️ 解析失敗','err');
+          }
+        }catch(e){
+          refreshLog=['❌ 解析錯誤: '+e.message];
+        }
+        render();
+      },50);
+    })
+    .catch(function(e){
+      refreshLog=['❌ 連接失敗: '+e.message];
+      render();
+    });
 }
 
 function parseHK(text){
