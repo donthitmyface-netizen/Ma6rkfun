@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"/>
+
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="六合常中"/>
+<meta name="theme-color" content="#e91e63"/>
+<title>六合常中 🎱</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#fff5f8;--card:#fff;--border:#ffd6e7;--text:#3d1a2e;--sub:#a0688a;
+  --dim:#c4a0b4;--accent:#e91e63;--accent-bg:#fce4ec;--track:#fce4ec;
+  --row:#fff5f8;--input:#fff8fb;--iborder:#f8bbd0;--shadow:rgba(233,30,99,.1);
+  --tab:#fff;--header1:#e91e63;--header2:#ff6090;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans HK",sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:0;height:0;}
+button,input,select{font-family:inherit;}
+
+/* Animations */
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes confetti{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.float{animation:floatY 2.5s ease-in-out infinite}
+.fade{animation:fadeIn .3s ease}
+
+/* Header */
+#header{background:linear-gradient(135deg,var(--header1),var(--header2));padding:12px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:200;box-shadow:0 3px 12px rgba(0,0,0,.2);}
+#header .title{flex:1}
+#header .title h1{font-size:18px;font-weight:900;color:#fff;letter-spacing:.5px}
+#header .title p{font-size:9px;color:rgba(255,255,255,.75);letter-spacing:1.5px;margin-top:2px}
+.theme-btns{display:flex;gap:5px}
+.theme-btn{width:28px;height:28px;border-radius:8px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff}
+.theme-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.4)}
+#draw-info{text-align:right;flex-shrink:0}
+#draw-info .draw{font-size:11px;color:#fff;font-weight:800}
+#draw-info .date{font-size:9px;color:rgba(255,255,255,.75)}
+
+/* Lucky bar */
+#lucky-bar{background:rgba(233,30,99,.08);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:8px;}
+#lucky-bar span{font-size:10px;color:var(--accent);font-weight:700;white-space:nowrap}
+#lucky-track{flex:1;height:5px;background:var(--track);border-radius:3px;overflow:hidden}
+#lucky-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .5s}
+#lucky-pct{font-size:10px;font-weight:800;color:var(--accent);white-space:nowrap}
+#lucky-msg{font-size:9px;color:var(--sub);white-space:nowrap}
+
+/* Tabs */
+#tabs{display:flex;overflow-x:auto;background:var(--tab);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:199;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;padding:10px 10px;border:none;background:none;border-bottom:3px solid transparent;color:var(--sub);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:color .15s}
+.tab-btn.active{border-bottom-color:var(--accent);color:var(--accent)}
+
+/* Content */
+#content{padding:12px 12px 60px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px var(--shadow)}
+.card.accent-top{border-top:4px solid var(--accent)}
+.row-item{background:var(--row);border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+
+/* Balls */
+.ball{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;user-select:none;transition:all .15s}
+.ball-r{background:#ffcdd2;border:2px solid #e53935;color:#e53935}
+.ball-b{background:#bbdefb;border:2px solid #1e88e5;color:#1e88e5}
+.ball-g{background:#c8e6c9;border:2px solid #43a047;color:#43a047}
+.ball-o{background:#ffe0b2;border:2px solid #fb8c00;color:#fb8c00}
+.ball-p{background:#e1bee7;border:2px solid #8e24aa;color:#8e24aa}
+.ball-r.extra{background:#e53935;color:#fff;border-color:#e53935}
+.ball-b.extra{background:#1e88e5;color:#fff;border-color:#1e88e5}
+.ball-g.extra{background:#43a047;color:#fff;border-color:#43a047}
+.ball-o.extra{background:#fb8c00;color:#fff;border-color:#fb8c00}
+.ball-p.extra{background:#8e24aa;color:#fff;border-color:#8e24aa}
+
+/* Buttons */
+.btn{padding:11px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.15);border:1.5px solid transparent;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-full{width:100%}
+.btn-ghost{background:var(--card);color:var(--text);border-color:var(--iborder)}
+.btn-success{background:#2e7d32;color:#fff}
+.btn-danger{background:#c62828;color:#fff}
+.btn-gold{background:#f57f17;color:#fff}
+.btn-purple{background:#6a1b9a;color:#fff}
+.btn-fun{background:linear-gradient(135deg,var(--accent),#ff8a65);color:#fff}
+.btn:disabled{background:var(--row);color:var(--dim);border-color:var(--track);box-shadow:none;cursor:default}
+
+/* Pills */
+.pill{padding:7px 14px;border-radius:20px;border:1.5px solid var(--iborder);background:var(--card);color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+
+/* Input */
+input[type=text],input[type=date],input[type=password]{width:100%;padding:11px 13px;background:var(--input);border:1.5px solid var(--iborder);border-radius:10px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px}
+
+/* Bar */
+.bar-track{flex:1;height:6px;background:var(--track);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* Grid 49 */
+.grid49{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px}
+.grid49 button{aspect-ratio:1;border-radius:50%;font-weight:800;font-size:11px;cursor:pointer;border:2px solid var(--iborder);background:var(--input);transition:all .1s;padding:0}
+
+/* Toast */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);border-radius:12px;padding:10px 20px;font-size:13px;color:#fff;z-index:9999;max-width:92vw;text-align:center;line-height:1.5;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3);font-weight:600;display:none}
+#toast.ok{background:#2e7d32}
+#toast.err{background:#c62828}
+
+/* Confetti */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9990;overflow:hidden;display:none}
+
+/* Settings */
+#settings-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+#settings-modal.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+
+/* FAB */
+#fab{position:fixed;bottom:22px;right:16px;width:48px;height:48px;border-radius:50%;border:none;background:linear-gradient(135deg,#e91e63,#ff6090);font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(233,30,99,.4);z-index:100;color:#fff}
+
+/* Dark theme */
+body.dark{
+  --bg:#121212;--card:#1e1e1e;--border:#333;--text:#f0f0f0;--sub:#aaa;
+  --dim:#555;--accent:#ff69b4;--accent-bg:#2a0f1f;--track:#333;
+  --row:#252525;--input:#2a2a2a;--iborder:#444;--shadow:rgba(0,0,0,.5);
+  --tab:#1e1e1e;--header1:#1a0a12;--header2:#2d0a1f;
+}
+body.dark .ball-r{background:#5a0000;color:#ddd}
+body.dark .ball-b{background:#082040;color:#ddd}
+body.dark .ball-g{background:#083008;color:#ddd}
+body.dark .ball-o{background:#5a2000;color:#ddd}
+body.dark .ball-p{background:#200030;color:#ddd}
+
+/* Pastel theme */
+body.pastel{
+  --bg:#f0f7ff;--card:#fff;--border:#d0e8ff;--text:#1a2a4a;--sub:#6080a0;
+  --dim:#a0c0e0;--accent:#5b8dee;--accent-bg:#e8f0ff;--track:#ddeeff;
+  --row:#f5f9ff;--input:#f8fbff;--iborder:#c0d8ff;--shadow:rgba(91,141,238,.1);
+  --tab:#fff;--header1:#5b8dee;--header2:#a855f7;
+}
+
+/* Workshop tabs */
+.w-tabs{display:flex;background:var(--track);border-radius:12px;padding:4px;margin-bottom:14px}
+.w-tab{flex:1;padding:9px 4px;border:none;border-radius:9px;background:none;color:var(--sub);font-weight:800;font-size:12px;cursor:pointer;transition:all .2s}
+.w-tab.active{background:var(--card);color:var(--accent);box-shadow:0 2px 8px var(--shadow)}
+
+/* Method cards */
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.method-card{padding:10px 12px;border-radius:12px;border:2px solid var(--iborder);background:var(--input);cursor:pointer;text-align:left;transition:all .15s}
+.method-card.active{box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.method-card .mc-icon{font-size:16px;margin-bottom:3px}
+.method-card .mc-label{font-size:11px;font-weight:800}
+.method-card .mc-desc{font-size:9px;color:var(--dim)}
+
+/* Source tag */
+.src-tag{display:inline-block;font-size:9px;background:rgba(233,30,99,.13);color:var(--accent);border-radius:20px;padding:2px 7px;margin-right:4px;margin-bottom:2px;font-weight:700}
+
+/* Heatmap */
+.heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.heat-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid transparent;transition:all .3s}
+.heat-cell .hn{font-size:11px;font-weight:900}
+.heat-cell .hc{font-size:8px}
+
+/* Countdown */
+#countdown{font-variant-numeric:tabular-nums;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px}
+
+/* Steps */
+.step-label{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:4px;letter-spacing:1px}
+
+/* Result display */
+.result-card{background:linear-gradient(135deg,var(--card),var(--accent-bg));border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 16px var(--shadow)}
+.balls-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+
+/* MBTI grid */
+.mbti-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
+.mbti-btn{padding:7px 3px;border-radius:10px;border:2px solid var(--iborder);background:var(--input);cursor:pointer;transition:all .15s}
+.mbti-btn.active{border-color:var(--accent);background:var(--accent-bg)}
+.mbti-btn .mb-name{font-size:10px;font-weight:800;color:var(--text)}
+.mbti-btn.active .mb-name{color:var(--accent)}
+.mbti-btn .mb-desc{font-size:8px;color:var(--sub);margin-top:1px}
+
+/* Sub-tabs (predict) */
+.sub-tabs{display:flex;margin-bottom:14px;background:var(--track);border-radius:12px;padding:4px}
+.sub-tab{flex:1;padding:10px 0;border:none;border-radius:9px;background:none;color:var(--sub);font-weight:800;font-size:13px;cursor:pointer;transition:all .2s}
+.sub-tab.active{background:var(--card);box-shadow:0 2px 8px var(--shadow)}
+
+/* Discussion */
+.post-card{background:var(--row);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.post-card:hover{border-color:var(--accent)}
+.post-card.pinned{background:linear-gradient(135deg,var(--card),var(--accent-bg));border:1.5px solid rgba(233,30,99,.2)}
+.post-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px}
+.post-meta{font-size:9px;color:var(--sub)}
+.post-preview{font-size:11px;color:var(--sub);line-height:1.6;margin-top:8px}
+
+/* Chip row */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+
+/* Inline stat bar */
+.sbar{margin-bottom:5px}
+.sbar-header{display:flex;justify-content:space-between;font-size:9px;color:var(--sub);margin-bottom:2px}
+.sbar-track{height:5px;background:var(--track);border-radius:3px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:3px;transition:width .5s}
+
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Confetti -->
+<div id="confetti"></div>
+
+<!-- Settings Modal -->
+<div id="settings-modal">
+  <div class="modal-box">
+    <div style="font-size:16px;font-weight:900;color:#e91e63;margin-bottom:4px">⚙️ API Key 設定</div>
+    <div style="font-size:11px;color:#757575;margin-bottom:16px;line-height:1.9">填入 Anthropic API Key 啟用 AI 功能。<br/>申請：<span style="color:#e91e63">console.anthropic.com</span>（免費）<br/>每次約 HK$0.01 · 其他功能完全免費</div>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="margin-bottom:16px"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div class="float" style="font-size:28px;flex-shrink:0">🎱</div>
+  <div class="title">
+    <h1>六合常中</h1>
+    <p>娛樂數字分析 · 純屬好玩</p>
+  </div>
+  <div class="theme-btns">
+    <button class="theme-btn active" id="btn-fun" onclick="setTheme('fun')" title="歡樂">🎪</button>
+    <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" title="夜間">🌙</button>
+    <button class="theme-btn" id="btn-pastel" onclick="setTheme('pastel')" title="粉彩">🌸</button>
+  </div>
+  <div id="draw-info">
+    <div class="draw" id="hdr-draw">--/---</div>
+    <div class="date" id="hdr-date">----</div>
+  </div>
+</div>
+
+<!-- Lucky bar -->
+<div id="lucky-bar">
+  <span>✨ 今日幸運</span>
+  <div id="lucky-track"><div id="lucky-fill"></div></div>
+  <span id="lucky-pct"></span>
+  <span id="lucky-msg"></span>
+</div>
+
+<!-- Tabs -->
+<div id="tabs">
+  <button class="tab-btn active" data-tab="latest">🏠主頁</button>
+  <button class="tab-btn" data-tab="workshop">🎰工坊</button>
+  <button class="tab-btn" data-tab="heatmap">🔥熱力</button>
+  <button class="tab-btn" data-tab="alarm">⏰提醒</button>
+  <button class="tab-btn" data-tab="history">📜歷史</button>
+  <button class="tab-btn" data-tab="stats">📊統計</button>
+  <button class="tab-btn" data-tab="checker">✅對獎</button>
+  <button class="tab-btn" data-tab="mybets">🎯記錄</button>
+  <button class="tab-btn" data-tab="board">🏆榜</button>
+  <button class="tab-btn" data-tab="predict">🔮預測</button>
+  <button class="tab-btn" data-tab="discuss">💬社區</button>
+</div>
+
+<!-- Content -->
+<div id="content"></div>
+
+<!-- FAB -->
+<button id="fab" onclick="openSettings()">⚙️</button>
+
+<script>
+
+// ═══════════════════════════════════════════
+// 六合常中 v10 - Pure Vanilla JS (No React/Babel)
+// Worker URL - change this after Cloudflare setup
+// ═══════════════════════════════════════════
+const WORKER_URL = "https://ma6rkfun.donthitmyface.workers.dev";
+const DISQUS_SHORTNAME = "liu-he-chang-zhong";
+
+const HISTORY=[
+  {draw:"26/021",date:"2026-02-24",numbers:[2,3,4,10,13,23],extra:12},
+  {draw:"26/020",date:"2026-02-21",numbers:[2,18,34,35,37,49],extra:33},
+  {draw:"26/019",date:"2026-02-15",numbers:[8,28,33,36,37,46],extra:4},
+  {draw:"26/018",date:"2026-02-12",numbers:[2,3,14,25,37,46],extra:10},
+  {draw:"26/017",date:"2026-02-10",numbers:[3,4,14,18,26,39],extra:40},
+  {draw:"26/016",date:"2026-02-07",numbers:[12,22,28,32,37,44],extra:20},
+  {draw:"26/015",date:"2026-02-05",numbers:[1,9,17,24,35,36],extra:42},
+  {draw:"26/014",date:"2026-02-03",numbers:[12,23,27,37,39,42],extra:5},
+  {draw:"26/013",date:"2026-01-31",numbers:[25,30,32,35,36,47],extra:46},
+  {draw:"26/012",date:"2026-01-29",numbers:[6,9,12,14,35,44],extra:11},
+  {draw:"26/011",date:"2026-01-27",numbers:[7,12,14,25,38,47],extra:15},
+  {draw:"26/010",date:"2026-01-24",numbers:[6,16,17,22,28,48],extra:45},
+  {draw:"26/009",date:"2026-01-22",numbers:[4,9,15,24,27,31],extra:45},
+  {draw:"26/008",date:"2026-01-20",numbers:[1,4,6,9,44,46],extra:27},
+  {draw:"26/007",date:"2026-01-17",numbers:[5,12,15,23,27,42],extra:46},
+  {draw:"26/006",date:"2026-01-15",numbers:[3,6,37,38,39,44],extra:48},
+  {draw:"26/005",date:"2026-01-13",numbers:[14,24,34,38,48,49],extra:27},
+  {draw:"26/004",date:"2026-01-10",numbers:[3,16,20,22,24,37],extra:42},
+  {draw:"26/003",date:"2026-01-08",numbers:[15,21,24,40,45,46],extra:13},
+  {draw:"26/002",date:"2026-01-06",numbers:[2,8,12,19,28,36],extra:1},
+  {draw:"26/001",date:"2026-01-03",numbers:[2,10,13,16,20,21],extra:14},
+  {draw:"25/134",date:"2025-12-28",numbers:[7,10,11,19,25,30],extra:45},
+  {draw:"25/133",date:"2025-12-25",numbers:[1,2,4,30,41,43],extra:13},
+  {draw:"25/132",date:"2025-12-21",numbers:[9,17,27,34,39,47],extra:46},
+  {draw:"25/131",date:"2025-12-18",numbers:[6,23,28,31,33,34],extra:11},
+  {draw:"25/130",date:"2025-12-16",numbers:[3,12,23,28,35,38],extra:24},
+  {draw:"25/129",date:"2025-12-13",numbers:[10,17,19,28,45,49],extra:1},
+  {draw:"25/128",date:"2025-12-11",numbers:[1,5,6,25,30,42],extra:43},
+  {draw:"25/127",date:"2025-12-06",numbers:[4,6,26,28,34,40],extra:25},
+  {draw:"25/126",date:"2025-12-02",numbers:[6,18,29,34,37,38],extra:39},
+  {draw:"25/125",date:"2025-11-25",numbers:[1,2,17,35,37,48],extra:8},
+  {draw:"25/124",date:"2025-11-20",numbers:[19,26,33,35,36,39],extra:5},
+  {draw:"25/123",date:"2025-11-18",numbers:[2,4,10,26,28,36],extra:23},
+  {draw:"25/122",date:"2025-11-16",numbers:[2,11,13,28,38,47],extra:7},
+  {draw:"25/121",date:"2025-11-13",numbers:[10,11,28,30,37,39],extra:15},
+  {draw:"25/120",date:"2025-11-11",numbers:[18,20,28,37,38,40],extra:41},
+  {draw:"25/119",date:"2025-11-08",numbers:[7,9,16,17,33,46],extra:49},
+  {draw:"25/118",date:"2025-11-06",numbers:[10,17,22,33,40,41],extra:31},
+  {draw:"25/117",date:"2025-11-04",numbers:[19,20,26,28,39,44],extra:4},
+  {draw:"25/116",date:"2025-10-28",numbers:[4,7,15,21,45,46],extra:24},
+  {draw:"25/115",date:"2025-10-25",numbers:[6,7,27,36,39,43],extra:1},
+];
+
+// ── State ──
+let hist = [...HISTORY];
+let currentTab = 'latest';
+let theme = 'fun';
+let alarmOn = false, alarmMins = 30, alarmFired = false;
+let prizeOn = false, prizeThr = 1e8, prizeShown = false;
+let curPrize = 8000000;
+let picked = [], checkResult = null;
+let sMode = 'hot';
+let wTab = 'birthday', wBday = '', wMbti = '', wSources = {golden:false,fib:false,gap:false,hot:false,cold:false};
+let wResult = null;
+let myBets = [], boardEntries = [];
+let betInput = [], betNote = '', betDraw = '', betMode = 'standard', pCount = 6, sureCt = 1;
+let pTab = 'math', mMethod = 'combined', mResult = null, aiResult = null;
+let heatMode = 'all';
+let showAddBet = false, showAddBoard = false;
+let boardName = '', boardPicks = [];
+let selPost = null;
+let pLoading = false, mLoading = false, wAiLoading = false;
+let showMathDetail = false;
+
+// Load saved data
+try { myBets = JSON.parse(localStorage.getItem('ms_bets')||'[]'); } catch {}
+try { boardEntries = JSON.parse(localStorage.getItem('ms_board')||'[]'); } catch {}
+
+// ── Utils ──
+const ZC = {r:'#e53935',b:'#1e88e5',g:'#43a047',o:'#fb8c00',p:'#8e24aa'};
+const ZCL = {r:'#ffcdd2',b:'#bbdefb',g:'#c8e6c9',o:'#ffe0b2',p:'#e1bee7'};
+const ZCD = {r:'#5a0000',b:'#082040',g:'#083008',o:'#5a2000',p:'#200030'};
+function gz(n){return n<=10?'r':n<=20?'b':n<=30?'g':n<=40?'o':'p';}
+
+function ball(n, sz=40, extra=false, dim=false, ring=false, ringColor=''){
+  const c=gz(n), col=ZC[c];
+  const rc = ringColor||col;
+  const isDark = document.body.classList.contains('dark');
+  const bg = extra ? col : (isDark ? ZCD[c] : ZCL[c]);
+  const textCol = extra ? '#fff' : (isDark ? '#ddd' : col);
+  const border = ring ? `3px solid ${rc}` : `2px solid ${col}`;
+  const fs = Math.round(sz*0.37);
+  const opacity = dim ? 0.35 : 1;
+  const shadow = ring ? `0 0 0 2px ${rc},0 3px 10px rgba(0,0,0,.2)` : extra ? '0 3px 10px rgba(0,0,0,.3)' : '0 2px 6px rgba(0,0,0,.12)';
+  return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;flex-shrink:0;background:${bg};border:${border};display:inline-flex;align-items:center;justify-content:center;color:${textCol};font-weight:900;font-size:${fs}px;box-shadow:${shadow};opacity:${opacity};user-select:none">${n}</div>`;
+}
+
+function ballsRow(numbers, extra, sz=40){
+  return numbers.map(n=>ball(n,sz)).join('') + `<span style="color:var(--dim);font-size:${sz*0.5}px;margin:0 4px;font-weight:300">+</span>` + ball(extra,sz,true);
+}
+
+function fmtPrize(n){if(n>=1e8)return`$${(n/1e8).toFixed(1)}億`;if(n>=1e7)return`$${(n/1e7).toFixed(0)}千萬`;if(n>=1e6)return`$${(n/1e6).toFixed(0)}百萬`;return`$${n.toLocaleString()}`;}
+
+function calcStats(){
+  const freq={},last={};
+  for(let i=1;i<=49;i++)freq[i]=0;
+  hist.forEach(({numbers,extra},idx)=>[...numbers,extra].forEach(n=>{freq[n]++;if(last[n]===undefined)last[n]=idx;}));
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  return {freq,last,sorted,mxF:+sorted[0][1]};
+}
+
+function calcNextDraw(){
+  const l=hist[0],[yr,num]=l.draw.split('/');
+  const dn=`${yr}/${String(parseInt(num)+1).padStart(3,'0')}`;
+  const dd=[2,4,6];let d=new Date(`${l.date}T21:30:00+08:00`);
+  d.setDate(d.getDate()+1);
+  while(!dd.includes(d.getDay()))d.setDate(d.getDate()+1);
+  return{drawNum:dn,date:d.toISOString().slice(0,10)};
+}
+
+function getCountdown(){
+  const nd=calcNextDraw();
+  const diff=new Date(`${nd.date}T21:30:00+08:00`)-new Date();
+  if(diff<=0)return null;
+  return{days:Math.floor(diff/86400000),hours:Math.floor(diff%86400000/3600000),mins:Math.floor(diff%3600000/60000),secs:Math.floor(diff%60000/1000),diff};
+}
+
+// ── Math engines ──
+const PHI=1.6180339887,FIBS=[1,2,3,5,8,13,21,34];
+function hotScores(){const f={};for(let i=1;i<=49;i++)f[i]=0;hist.slice(0,12).forEach(({numbers,extra})=>[...numbers,extra].forEach(n=>f[n]++));const mf=Math.max(...Object.values(f))||1;const s={};for(let n=1;n<=49;n++)s[n]=f[n]/mf;return s;}
+function coldScores(){const hs=hotScores();const s={};for(let n=1;n<=49;n++)s[n]=1-hs[n];return s;}
+function goldenScores(){const gp=[49/PHI,49/PHI**2,49*(1-1/PHI),49/PHI**3,49*(2-PHI),49*(PHI-1),30,19];const f={};for(let i=1;i<=49;i++)f[i]=0;hist.forEach(({numbers,extra})=>[...numbers,extra].forEach(n=>f[n]++));const mf=Math.max(...Object.values(f));const s={};for(let n=1;n<=49;n++){const d=Math.min(...gp.map(p=>Math.abs(n-p)));s[n]=Math.max(0,1-d/10)*.6+(f[n]/mf)*.4;}return s;}
+function fibScores(){const f={};for(let i=1;i<=49;i++)f[i]=0;hist.forEach(({numbers,extra})=>[...numbers,extra].forEach(n=>f[n]++));const mf=Math.max(...Object.values(f));const s={};for(let n=1;n<=49;n++){const fd=Math.min(...FIBS.map(x=>Math.abs(n-x)));const pd=Math.min(...FIBS.map(x=>Math.abs(n-x*PHI)));s[n]=(FIBS.includes(n)?1:Math.max(0,1-fd/8))*.35+Math.max(0,1-pd/5)*.25+(f[n]/mf)*.4;}return s;}
+function gapScores(){const f={},ls={};for(let i=1;i<=49;i++)f[i]=0;hist.forEach(({numbers,extra},i)=>[...numbers,extra].forEach(n=>{f[n]++;if(ls[n]===undefined)ls[n]=i;}));const td=hist.length;const s={};for(let n=1;n<=49;n++){const ap=f[n]>0?td/f[n]:td;s[n]=Math.min((ls[n]!==undefined?ls[n]:td)/ap/3,1);}return s;}
+function runMath(){
+  const golden=goldenScores(),fib=fibScores(),gap=gapScores(),hot=hotScores(),cold=coldScores();
+  const parity={},sum={},tail={};
+  const p={odd:0,even:0};hist.forEach(({numbers})=>numbers.forEach(n=>n%2===0?p.even++:p.odd++));
+  const r=p.odd/(p.odd+p.even);
+  const sm=hist.map(({numbers})=>numbers.reduce((a,b)=>a+b,0));
+  const apn=sm.reduce((a,b)=>a+b,0)/sm.length/6;
+  const tf={};for(let t=0;t<=9;t++)tf[t]=0;
+  hist.slice(0,10).forEach(({numbers,extra})=>[...numbers,extra].forEach(n=>tf[n%10]++));
+  const mt=Math.max(...Object.values(tf));
+  for(let n=1;n<=49;n++){parity[n]=n%2?1-r:r;sum[n]=Math.max(0,1-Math.abs(n-apn)/25);tail[n]=1-tf[n%10]/(mt+1);}
+  const W={golden:.20,fib:.15,gap:.25,parity:.15,sum:.15,tail:.10};
+  const fs={};
+  for(let n=1;n<=49;n++)fs[n]=(golden[n]||0)*W.golden+(fib[n]||0)*W.fib+(gap[n]||0)*W.gap+(parity[n]||0)*W.parity+(sum[n]||0)*W.sum+(tail[n]||0)*W.tail;
+  return Object.entries(fs).sort((a,b)=>b[1]-a[1]).map(([n,score])=>({n:+n,score,golden:golden[n],fib:fib[n],gap:gap[n],parity:parity[n],sum:sum[n],tail:tail[n]}));
+}
+
+// ── Workshop engine ──
+const ZODIAC_LUCKY={鼠:[1,13,25,37],牛:[2,14,26,38],虎:[3,15,27,39],兔:[4,16,28,40],龍:[5,17,29,41],蛇:[6,18,30,42],馬:[7,19,31,43],羊:[8,20,32,44],猴:[9,21,33,45],雞:[10,22,34,46],狗:[11,23,35,47],豬:[12,24,36,48]};
+const STAR_LUCKY={牡羊:[5,14,23,32,41],金牛:[6,15,24,33,42],雙子:[7,16,25,34,43],巨蟹:[2,11,20,29,38],獅子:[1,10,19,28,37],處女:[4,13,22,31,40],天秤:[3,12,21,30,39],天蠍:[8,17,26,35,44],射手:[9,18,27,36,45],摩羯:[10,19,28,37,46],水瓶:[11,20,29,38,47],雙魚:[12,21,30,39,48]};
+const MBTI_LUCKY={INTJ:[7,14,21,35,42,49],INTP:[3,11,22,33,44,8],ENTJ:[1,10,19,28,37,46],ENTP:[6,13,24,35,46,2],INFJ:[9,18,27,36,45,4],INFP:[5,16,27,38,49,11],ENFJ:[2,12,23,34,45,7],ENFP:[4,14,25,36,47,9],ISTJ:[8,16,24,32,40,48],ISFJ:[3,13,23,33,43,6],ESTJ:[10,20,30,40,15,5],ESFJ:[1,11,21,31,41,12],ISTP:[7,17,27,37,47,4],ISFP:[6,16,26,36,46,3],ESTP:[9,18,28,38,48,5],ESFP:[2,12,22,32,42,8]};
+const MBTI_DESC={INTJ:'建築師🏛',INTP:'邏輯學家🧪',ENTJ:'指揮官⚔',ENTP:'辯論家💡',INFJ:'提倡者🌿',INFP:'調停者🌙',ENFJ:'主人公🌟',ENFP:'競選者🎨',ISTJ:'物流師📋',ISFJ:'守護者🛡',ESTJ:'總經理💼',ESFJ:'執政官👑',ISTP:'鑑賞家🔧',ISFP:'探險家🦋',ESTP:'企業家🚀',ESFP:'表演者🎭'};
+const MBTI_TRAIT={INTJ:'獨特冷門派',INTP:'質數奇數派',ENTJ:'強勢頭號派',ENTP:'冷門組合派',INFJ:'直覺引導派',INFP:'跟感覺走派',ENFJ:'熱情熱號派',ENFP:'隨心所欲派',ISTJ:'跟統計走派',ISFJ:'保守穩陣派',ESTJ:'嚴格數據派',ESFJ:'人氣大眾派',ISTP:'工程師分析派',ISFP:'美感直覺派',ESTP:'高風險回報派',ESFP:'最活躍玩家派'};
+function getZodiac(y){return['鼠','牛','虎','兔','龍','蛇','馬','羊','猴','雞','狗','豬'][(y-1900)%12];}
+function getStar(m,d){const cuts=[[1,20,'水瓶'],[2,19,'雙魚'],[3,21,'牡羊'],[4,20,'金牛'],[5,21,'雙子'],[6,21,'巨蟹'],[7,23,'獅子'],[8,23,'處女'],[9,23,'天秤'],[10,23,'天蠍'],[11,22,'射手'],[12,22,'摩羯']];for(const[mo,day,name]of cuts)if(m===mo&&d>=day)return name;return cuts[(cuts.findIndex(c=>c[0]===m)-1+12)%12][2];}
+const todayLuckyIndex=(()=>{const d=new Date();return(d.getDate()*7+d.getMonth()*13+d.getFullYear())%100;})();
+const LUCKY_MSGS=['今日宇宙能量爆棚💥','今日財星高照⭐','今日鴻運當頭🌈','今日中獎感強烈🎯','今日稍欠運氣😅','今日平平無奇😐','今日宇宙在充電🔋'];
+
+function runWorkshop(bday, mbti, sources){
+  const scoreMap={}, labelMap={};
+  for(let n=1;n<=49;n++){scoreMap[n]=0;labelMap[n]=[];}
+  if(sources.birthday && bday){
+    const[yr,mo,dy]=bday.split('-').map(Number);
+    const zodiac=getZodiac(yr),star=getStar(mo,dy);
+    const zl=ZODIAC_LUCKY[zodiac]||[],sl=STAR_LUCKY[star]||[];
+    const bdNums=new Set([...zl,...sl,dy%49||49,mo%49||1,(yr%49)||7]);
+    const seed=yr+mo*100+dy;
+    for(let n=1;n<=49;n++){
+      const sc=(bdNums.has(n)?1.5:0)+Math.abs(Math.sin(n*seed))*.3;
+      scoreMap[n]+=sc;
+      if(zl.includes(n))labelMap[n].push(zodiac+'生肖');
+      if(sl.includes(n))labelMap[n].push(star+'星座');
+    }
+  }
+  if(sources.mbti && mbti){const ml=MBTI_LUCKY[mbti]||[];ml.forEach((n,i)=>{scoreMap[n]+=1.2-i*.05;labelMap[n].push(mbti);});}
+  if(sources.golden){const gs=goldenScores();for(let n=1;n<=49;n++){scoreMap[n]+=gs[n]*1.0;if(gs[n]>0.6)labelMap[n].push('黃金分割φ');}}
+  if(sources.fib){const fs=fibScores();for(let n=1;n<=49;n++){scoreMap[n]+=fs[n]*0.8;if(fs[n]>0.5)labelMap[n].push('費氏數列∞');}}
+  if(sources.gap){const gs=gapScores();for(let n=1;n<=49;n++){scoreMap[n]+=gs[n]*0.9;if(gs[n]>0.5)labelMap[n].push('遺漏回歸↩');}}
+  if(sources.hot){const hs=hotScores();for(let n=1;n<=49;n++){scoreMap[n]+=hs[n]*0.8;if(hs[n]>0.6)labelMap[n].push('近期熱號🔥');}}
+  if(sources.cold){const cs=coldScores();for(let n=1;n<=49;n++){scoreMap[n]+=cs[n]*0.8;if(cs[n]>0.6)labelMap[n].push('久違冷號🧊');}}
+  const ranked=Object.entries(scoreMap).map(([n,s])=>({n:+n,score:s,labels:labelMap[+n]})).sort((a,b)=>b.score-a.score);
+  const nums=ranked.slice(0,6).map(x=>x.n).sort((a,b)=>a-b);
+  const extraCand=ranked.find(x=>!nums.includes(x.n));
+  const extra=extraCand?extraCand.n:ranked[6].n;
+  return{nums,extra,ranked,details:[...nums.map(n=>({n,labels:ranked.find(x=>x.n===n)?.labels||[],isExtra:false})),{n:extra,labels:extraCand?.labels||[],isExtra:true}]};
+}
+
+// ── Discussion posts ──
+const POSTS=[
+  {id:'r1',pin:true,emoji:'📌',title:'社群規則 & 免責聲明',date:'2026-01-01',likes:0,content:'本討論區純屬娛樂交流。任何號碼分析均為統計參考，不構成投注建議。六合彩結果完全隨機，請量力而為，理性娛樂。未成年人士不得投注。如有沉迷賭博問題，請致電賭博輔導熱線 1800-6-668668。'},
+  {id:'r2',pin:true,emoji:'🎓',title:'【玩法攻略】號碼工坊怎麼用？',date:'2026-01-15',likes:88,content:'號碼工坊係本App最好玩嘅功能！\n\n🎂 生日派：輸入你的生日，系統根據生肖+星座+生日數字生成號碼，每個號碼都話你知點解佢係「你的號碼」。\n\n🧠 MBTI派：16種人格各有傾向，不知道自己係咩MBTI？去 16personalities.com 測一下！\n\n🎂+🧠 混合派：兩者結合，仲可以加方法加持，自由配搭！'},
+  {id:'r3',pin:true,emoji:'🔥',title:'你係邊款MBTI？你的號碼係咩？',date:'2026-01-20',likes:142,content:'管理員係 ENFP，號碼工坊幫我選出了 4, 14, 25, 36, 47, 9。\n\n大家用完號碼工坊後覺得準唔準？分享一下你係咩MBTI，生成咗咩號碼！\n\n留言區歡迎討論！（需要 Disqus 帳號）'},
+  {id:'r4',pin:false,emoji:'💡',title:'熱力圖觀察：37號係今年超熱號！',date:'2026-02-01',likes:56,content:'用熱力圖睇咗一下，37號今年出現次數超高！26/021 有、26/018 有、26/017 有...\n\n大家點睇？係真係熱號，定係已經太熱會降溫？'},
+  {id:'r5',pin:false,emoji:'📊',title:'【統計觀察】近12期正碼分析',date:'2026-02-10',likes:34,content:'近期發現幾個規律：\n\n1. 20-30號區近期出現偏少\n2. 37號連續多期出現，係今年最熱單號\n3. 連號近期較多，可以留意\n\n大家有咩觀察？'},
+];
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg, type='ok', d=3500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=type;t.style.display='block';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.style.display='none',d);
+}
+
+// ── Confetti ──
+function showConfetti(){
+  const c=document.getElementById('confetti');
+  c.innerHTML='';c.style.display='block';
+  const colors=['#ff6090','#ffd740','#40c4ff','#69f0ae','#ff9100','#ea80fc'];
+  for(let i=0;i<40;i++){
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;left:${(i*37+13)%100}%;top:-20px;width:${i%3===0?10:7}px;height:${i%3===0?10:7}px;border-radius:${i%2?'50%':'2px'};background:${colors[i%6]};animation:confetti ${1.2+i*.06}s ease-in ${(i*.04)%0.8}s forwards`;
+    c.appendChild(d);
+  }
+  setTimeout(()=>{c.style.display='none';c.innerHTML='';},3500);
+}
+
+// ── Theme ──
+function setTheme(t){
+  theme=t;
+  document.body.className=t==='fun'?'':t;
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.id===`btn-${t}`));
+  render();
+}
+
+// ── Lucky bar ──
+function initLucky(){
+  document.getElementById('lucky-fill').style.width=todayLuckyIndex+'%';
+  document.getElementById('lucky-pct').textContent=todayLuckyIndex+'%';
+  document.getElementById('lucky-msg').textContent=LUCKY_MSGS[Math.floor(todayLuckyIndex/15)];
+}
+
+// ── Header ──
+function updateHeader(){
+  const l=hist[0];
+  document.getElementById('hdr-draw').textContent=l.draw;
+  document.getElementById('hdr-date').textContent=l.date;
+}
+
+// ── Countdown ──
+let cdTimer;
+function startCountdown(){
+  clearInterval(cdTimer);
+  cdTimer=setInterval(()=>{
+    const el=document.getElementById('countdown');
+    if(!el)return;
+    const cd=getCountdown();
+    if(!cd){el.innerHTML='🎱 係時候開獎！';return;}
+    let s=cd.days>0?`<span style="font-size:16px">${cd.days}日 </span>`:'';
+    s+=`${String(cd.hours).padStart(2,'0')}:${String(cd.mins).padStart(2,'0')}:${String(cd.secs).padStart(2,'0')}`;
+    el.innerHTML=s;
+    if(alarmOn && !alarmFired && cd.diff/60000<=alarmMins){
+      alarmFired=true;
+      triggerAlarm('time');
+    }
+    if(!cd)alarmFired=false;
+  },1000);
+}
+
+function triggerAlarm(type){
+  const msg=type==='prize'?`🎰 頭獎已達 ${fmtPrize(curPrize)}！`:`⏰ 攪珠還有 ${alarmMins} 分鐘！`;
+  showToast(msg,'ok',5000);
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted')new Notification('🎱 六合常中',{body:msg});
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.25,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.25);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.25);});}catch{}
+}
+
+// ── Refresh ──
+let refreshLog = [];
+async function doRefresh(){
+  const btn=document.getElementById('refresh-btn');
+  if(btn){btn.disabled=true;btn.textContent='🔄 更新中...';}
+  refreshLog=['🔄 連接 Cloudflare Worker...'];
+  renderRefreshLog();
+  try{
+    const _ctrl=new AbortController();
+    const _timer=setTimeout(()=>_ctrl.abort(),15000);
+    const res=await fetch(WORKER_URL,{signal:_ctrl.signal});
+    clearTimeout(_timer);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    refreshLog.push('✅ 連接成功，解析數據...');
+    renderRefreshLog();
+    const text=await res.text();
+    const rows=parseHK(text);
+    if(rows.length>0){
+      const merged=[...rows,...hist].reduce((acc,h)=>{if(!acc.find(x=>x.draw===h.draw))acc.push(h);return acc;},[]).sort((a,b)=>b.draw.localeCompare(a.draw));
+      hist=merged;updateHeader();
+      refreshLog.push(`✅ 成功更新 ${rows.length} 期`,`📊 最新：${merged[0].draw}（${merged[0].date}）`,`🎱 ${merged[0].numbers.join(',')} 特：${merged[0].extra}`);
+      renderRefreshLog();
+      showToast(`✅ 更新成功！${merged[0].draw}: ${merged[0].numbers.join(',')} 特${merged[0].extra}`,'ok',6000);
+      showConfetti();
+      render();
+    } else {
+      refreshLog.push('⚠️ 數據格式有變，請稍後再試');
+      renderRefreshLog();
+      showToast('⚠️ 數據抓到但格式有變','err');
+    }
+  }catch(e){
+    refreshLog.push(`❌ 失敗：${e.message}`,'請確認 Worker 已部署');
+    renderRefreshLog();
+    showToast(`❌ 更新失敗：${e.message}`,'err');
+  }
+  if(btn){btn.disabled=false;btn.textContent='🔄 更新最新官方數據';}
+}
+
+function parseHK(text){
+  var rows=[];
+  try{
+    // Try multiple patterns to extract lottery results
+    var lines=text.split('\n');
+    for(var i=0;i<lines.length;i++){
+      var line=lines[i];
+      // Pattern: draw number like 26/021
+      var dm=line.match(/(\d{2}\/\d{3})/);
+      if(!dm) continue;
+      var draw=dm[1];
+      // Find numbers in nearby lines
+      var chunk=lines.slice(i,i+5).join(' ');
+      var nums=chunk.match(/\b([1-9]|[1-3][0-9]|4[0-9])\b/g);
+      // Find date
+      var dateM=chunk.match(/(\d{4})-(\d{2})-(\d{2})|(\d{2})\/(\d{2})\/(\d{4})/);
+      var date='';
+      if(dateM){
+        if(dateM[1]) date=dateM[1]+'-'+dateM[2]+'-'+dateM[3];
+        else date=dateM[6]+'-'+dateM[5]+'-'+dateM[4];
+      }
+      if(nums&&nums.length>=7&&date){
+        var uniq=[],seen={};
+        for(var j=0;j<nums.length;j++){var n=parseInt(nums[j]);if(n>=1&&n<=49&&!seen[n]){seen[n]=true;uniq.push(n);}}
+        if(uniq.length>=7){
+          var main=uniq.slice(0,6).sort(function(a,b){return a-b;});
+          rows.push({draw:draw,date:date,numbers:main,extra:uniq[6]});
+        }
+      }
+    }
+  }catch(e){}
+  return rows;
+}
+
+function renderRefreshLog(){
+  const el=document.getElementById('refresh-log');
+  if(!el)return;
+  el.innerHTML=refreshLog.map(l=>`<div style="font-size:11px;color:${l.startsWith('✅')?'#2e7d32':l.startsWith('❌')?'#c62828':l.startsWith('⚠️')?'#f57f17':'var(--sub)'};margin-bottom:3px;line-height:1.5">${l}</div>`).join('');
+}
+
+// ── Grid 49 ──
+function grid49(selected, onToggleFn, maxed=false){
+  let html='<div class="grid49">';
+  for(let n=1;n<=49;n++){
+    const sel=selected.includes(n),off=maxed&&!sel,c=gz(n),col=ZC[c];
+    const bg=sel?col:(off?'var(--bg)':'var(--input)');
+    const color=sel?'#fff':(off?'var(--dim)':col);
+    const border=sel?col:(off?'var(--track)':'var(--iborder)');
+    html+=`<button onclick="${onToggleFn}(${n})" style="aspect-ratio:1;border-radius:50%;font-weight:800;font-size:11px;cursor:${off?'default':'pointer'};border:2px solid ${border};background:${bg};color:${color};padding:0">${n}</button>`;
+  }
+  return html+'</div>';
+}
+
+// ── Settings ──
+function openSettings(){document.getElementById('settings-modal').classList.add('open');document.getElementById('api-key-input').value=localStorage.getItem('ms_key')||'';}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function saveApiKey(){localStorage.setItem('ms_key',document.getElementById('api-key-input').value.trim());showToast('✅ API Key 已儲存','ok');closeSettings();}
+
+// ── Tab render ──
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  render();
+  window.scrollTo(0,0);
+}
+
+document.getElementById('tabs').addEventListener('click',function(e){
+  const btn=e.target.closest('.tab-btn');
+  if(btn)switchTab(btn.dataset.tab);
+});
+
+// ── MAIN RENDER ──
+function render(){
+  const c=document.getElementById('content');
+  c.className='';
+  switch(currentTab){
+    case 'latest': c.innerHTML=renderLatest();break;
+    case 'workshop': c.innerHTML=renderWorkshop();break;
+    case 'heatmap': c.innerHTML=renderHeatmap();break;
+    case 'alarm': c.innerHTML=renderAlarm();break;
+    case 'history': c.innerHTML=renderHistory();break;
+    case 'stats': c.innerHTML=renderStats();break;
+    case 'checker': c.innerHTML=renderChecker();break;
+    case 'mybets': c.innerHTML=renderMyBets();break;
+    case 'board': c.innerHTML=renderBoard();break;
+    case 'predict': c.innerHTML=renderPredict();break;
+    case 'discuss': c.innerHTML=renderDiscuss();initDisqus();break;
+  }
+  startCountdown();
+  renderRefreshLog();
+}
+
+
+// ═══ LATEST ═══
+function renderLatest(){
+  var l=hist[0],nd=calcNextDraw();
+  var out='';
+  out+='<div class="card accent-top" style="text-align:center;background:linear-gradient(135deg,var(--card),var(--accent-bg))">';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:2px">'+l.draw+' · '+l.date+'</div>';
+  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:12px">🎱 最新開獎號碼</div>';
+  out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:4px">';
+  out+=ballsRow(l.numbers,l.extra,48);
+  out+='</div><div style="font-size:10px;color:var(--dim);margin-top:4px">正碼 · 特別號</div></div>';
+
+  out+='<div class="card" style="background:linear-gradient(135deg,var(--card),#fff8e1)">';
+  out+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
+  out+='<div><div style="font-size:12px;color:#f57f17;font-weight:800">⏳ 下期 '+nd.drawNum+'</div>';
+  out+='<div style="font-size:11px;color:var(--sub)">'+nd.date+' · 晚上 9:30</div></div>';
+  out+='<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:#e65100">'+fmtPrize(curPrize)+'</div>';
+  out+='<div style="font-size:9px;color:var(--dim)">估計頭獎</div></div></div>';
+
+  var PRESETS=[8e6,3e7,5e7,1e8,1.5e8,2e8];
+  var PLABELS=['$800萬','$3千萬','$5千萬','$1億','$1.5億','$2億'];
+  out+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
+  for(var pi=0;pi<PRESETS.length;pi++){
+    var active=curPrize===PRESETS[pi];
+    out+='<button onclick="setPrize('+PRESETS[pi]+')" style="padding:4px 9px;border-radius:20px;border:1.5px solid '+(active?'#f57f17':'var(--border)')+';background:'+(active?'#fff8e1':'var(--card)')+';color:'+(active?'#e65100':'var(--sub)')+';font-size:10px;cursor:pointer;font-weight:'+(active?700:400)+'">'+PLABELS[pi]+'</button>';
+  }
+  out+='</div>';
+  out+='<div style="background:rgba(233,30,99,.1);border:1px solid rgba(233,30,99,.2);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
+  out+='<span style="font-size:11px;color:var(--accent);font-weight:700">⏰ 攪珠倒數</span>';
+  out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div></div>';
+
+  out+='<button id="refresh-btn" class="btn btn-primary btn-full" onclick="doRefresh()" style="margin-bottom:6px;background:linear-gradient(135deg,var(--accent),#ff6090)">🔄 更新最新官方數據</button>';
+  out+='<div id="refresh-log" style="background:var(--row);border-radius:10px;padding:10px;margin-bottom:10px;border:1px solid var(--border);display:'+(refreshLog.length?'block':'none')+'"></div>';
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:14px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in 😅</span></div>';
+
+  out+='<div style="font-size:13px;color:var(--sub);font-weight:700;margin-bottom:8px">📜 近期開獎</div>';
+  for(var i=0;i<Math.min(hist.length,6);i++){
+    var h=hist[i];
+    out+='<div class="row-item" style="'+(i===0?'background:rgba(233,30,99,.08)':'')+'">';
+    out+='<div style="min-width:62px"><div style="font-size:12px;color:var(--accent);font-weight:800">'+h.draw+'</div><div style="font-size:9px;color:var(--dim)">'+h.date+'</div></div>';
+    out+='<div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:nowrap">';
+    for(var j=0;j<h.numbers.length;j++) out+=ball(h.numbers[j],26);
+    out+=ball(h.extra,26,true);
+    out+='</div></div>';
+  }
+  return out;
+}
+function setPrize(p){curPrize=p;render();}
+
+// ═══ WORKSHOP ═══
+var W_METHODS=[
+  {key:'golden',label:'黃金分割 φ',emoji:'✨',desc:'數學美感選號',color:'#f57f17'},
+  {key:'fib',label:'費氏數列 ∞',emoji:'🌀',desc:'自然界神奇序列',color:'#bf360c'},
+  {key:'gap',label:'遺漏回歸 ↩',emoji:'🎯',desc:'久未出現的號碼',color:'#2e7d32'},
+  {key:'hot',label:'近期熱號 🔥',emoji:'🔥',desc:'最近12期高頻',color:'#e53935'},
+  {key:'cold',label:'久違冷號 🧊',emoji:'🧊',desc:'很久沒出現的',color:'#1e88e5'},
+];
+
+function renderWorkshop(){
+  var bdayParsed=null;
+  if(wBday){var p=wBday.split('-').map(Number);bdayParsed={yr:p[0],mo:p[1],dy:p[2],z:getZodiac(p[0]),s:getStar(p[1],p[2])};}
+  var out='';
+  out+='<div style="text-align:center;margin-bottom:14px"><div style="font-size:24px;margin-bottom:4px">🎰✨</div>';
+  out+='<div style="font-size:18px;font-weight:900;color:var(--accent)">號碼生成工坊</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-top:4px">選擇配方，混合生成你的專屬幸運號碼！</div></div>';
+
+  out+='<div class="card"><div class="step-label">STEP 1 · 選擇你的來源</div>';
+  out+='<div class="w-tabs">';
+  var wTabs=[['birthday','🎂 生日派'],['mbti','🧠 MBTI派'],['combo','🎨 混合派']];
+  for(var i=0;i<wTabs.length;i++){
+    out+='<button class="w-tab '+(wTab===wTabs[i][0]?'active':'')+'" onclick="setWTab(\''+wTabs[i][0]+'\')">'+wTabs[i][1]+'</button>';
+  }
+  out+='</div>';
+
+  if(wTab==='birthday'||wTab==='combo'){
+    out+='<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:6px">🎂 你的生日</div>';
+    out+='<input type="date" value="'+wBday+'" onchange="wBday=this.value;render()" style="margin-bottom:'+(bdayParsed?'8px':'0')+'"/>';
+    if(bdayParsed){
+      out+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+      out+='<div style="flex:1;background:rgba(251,140,0,.12);border-radius:10px;padding:6px 10px;text-align:center;border:1px solid rgba(251,140,0,.2)"><div style="font-size:9px;color:#bf360c">生肖</div><div style="font-size:18px;font-weight:800;color:#e65100">'+bdayParsed.z+'</div></div>';
+      out+='<div style="flex:1;background:rgba(142,36,170,.12);border-radius:10px;padding:6px 10px;text-align:center;border:1px solid rgba(142,36,170,.2)"><div style="font-size:9px;color:#4a148c">星座</div><div style="font-size:14px;font-weight:800;color:#6a1b9a">'+bdayParsed.s+'座</div></div>';
+      out+='</div>';
+    }
+  }
+  if(wTab==='mbti'||wTab==='combo'){
+    out+='<div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:8px">🧠 你的 MBTI</div>';
+    out+='<div class="mbti-grid">';
+    var mbtiKeys=Object.keys(MBTI_DESC);
+    for(var i=0;i<mbtiKeys.length;i++){
+      var m=mbtiKeys[i];
+      out+='<button class="mbti-btn '+(wMbti===m?'active':'')+'" onclick="toggleMBTI(\''+m+'\')">';
+      out+='<div class="mb-name">'+m+'</div><div class="mb-desc">'+MBTI_DESC[m]+'</div></button>';
+    }
+    out+='</div>';
+    if(wMbti) out+='<div style="background:rgba(233,30,99,.1);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--accent);font-weight:600">你是 '+MBTI_DESC[wMbti]+' · '+MBTI_TRAIT[wMbti]+'</div>';
+  }
+  out+='</div>';
+
+  out+='<div class="card"><div class="step-label">STEP 2 · 方法加持（可疊加）</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">可以選多個，號碼分數會疊加！</div>';
+  out+='<div class="method-grid">';
+  for(var i=0;i<W_METHODS.length;i++){
+    var wm=W_METHODS[i],active=wSources[wm.key];
+    out+='<button class="method-card '+(active?'active':'')+'" onclick="toggleMethod(\''+wm.key+'\')" style="'+(active?'border-color:'+wm.color+';background:rgba(0,0,0,.05);box-shadow:0 2px 8px rgba(0,0,0,.2)':'')+'">';
+    out+='<div class="mc-icon">'+wm.emoji+'</div>';
+    out+='<div class="mc-label" style="color:'+(active?wm.color:'var(--text)')+'">'+wm.label+(active?' ✓':'')+'</div>';
+    out+='<div class="mc-desc">'+wm.desc+'</div></button>';
+  }
+  out+='</div></div>';
+
+  out+='<div class="card"><div class="step-label">STEP 3 · 生成號碼</div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  out+='<button class="btn btn-fun" style="height:52px;font-size:14px" onclick="doWorkshop()">🎰 數學配方</button>';
+  out+='<button class="btn btn-purple" style="height:52px;font-size:14px" onclick="doWorkshopAI()" '+(wAiLoading?'disabled':'')+'>'+(wAiLoading?'🔮 AI思考中...':'🤖 AI推薦')+'</button>';
+  out+='</div><div style="font-size:10px;color:var(--dim);text-align:center;margin-top:8px">AI 推薦需要 API Key（右下角⚙️設定）</div></div>';
+
+  if(wResult){
+    out+='<div class="result-card"><div style="text-align:center;margin-bottom:14px">';
+    out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:10px">'+(wResult.isAI?'🤖 AI 為你推薦的幸運號碼':'✨ 你的幸運號碼')+'</div>';
+    out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:6px">';
+    out+=ballsRow(wResult.nums,wResult.extra,50);
+    out+='</div><div style="font-size:10px;color:var(--dim)">正碼 · 特別號</div></div>';
+    if(wResult.aiReason) out+='<div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px">🤖 '+wResult.aiReason+'</div>';
+    if(!wResult.isAI){
+      out+='<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px">🔍 號碼來源解析</div>';
+      for(var i=0;i<wResult.details.length;i++){
+        var d=wResult.details[i];
+        out+='<div style="display:flex;align-items:center;gap:8px;background:var(--row);border-radius:10px;padding:8px 10px;border:1px solid var(--border);margin-bottom:6px">';
+        out+=ball(d.n,30,d.isExtra);
+        out+='<div><span style="font-size:10px;color:var(--dim);margin-right:4px">'+(d.isExtra?'特別號：':'正碼：')+'</span>';
+        if(d.labels&&d.labels.length>0){for(var j=0;j<d.labels.length;j++) out+='<span class="src-tag">'+d.labels[j]+'</span>';}
+        else out+='<span style="font-size:9px;color:var(--dim)">統計加權</span>';
+        out+='</div></div>';
+      }
+    }
+    out+='</div>';
+    out+='<div style="background:var(--row);border-radius:12px;padding:12px;margin-bottom:12px;font-size:10px;color:var(--dim);line-height:1.8;text-align:center">ℹ️ 號碼由所選配方演算生成，純屬娛樂參考。<br/><span style="color:var(--accent);font-weight:700">中咗係緣份，唔中繼續玩！😄</span></div>';
+  }
+  return out;
+}
+function setWTab(t){wTab=t;wResult=null;render();}
+function toggleMBTI(m){wMbti=wMbti===m?'':m;render();}
+function toggleMethod(k){wSources[k]=!wSources[k];render();}
+function doWorkshop(){
+  var src=Object.assign({},wSources);
+  if(wTab==='birthday'){src.birthday=true;src.mbti=false;}
+  else if(wTab==='mbti'){src.birthday=false;src.mbti=true;}
+  else{src.birthday=!!wBday;src.mbti=!!wMbti;}
+  if(wTab==='birthday'&&!wBday){showToast('👆 請先選擇你的生日','err');return;}
+  if(wTab==='mbti'&&!wMbti){showToast('👆 請先選擇你的 MBTI','err');return;}
+  if(wTab==='combo'&&!wBday&&!wMbti){showToast('👆 生日或MBTI至少填一個','err');return;}
+  var noMethod=!src.birthday&&!src.mbti&&!src.golden&&!src.fib&&!src.gap&&!src.hot&&!src.cold;
+  if(noMethod){showToast('👆 請至少選一個配方方法','err');return;}
+  wResult=Object.assign(runWorkshop(wBday,wMbti,src),{isAI:false});
+  showConfetti();showToast('🎉 你的幸運號碼出爐！','ok');render();
+}
+
+async function doWorkshopAI(){
+  var apiKey=localStorage.getItem('ms_key')||'';
+  if(!apiKey){showToast('⚙️ 請先設定 API Key','err');return;}
+  wAiLoading=true;render();
+  var recent=hist.slice(0,6).map(function(h){return h.draw+':'+h.numbers.join(',')+'+特'+h.extra;}).join('|');
+  var mathTop=runMath().slice(0,10).map(function(r){return r.n+'('+Math.round(r.score*100)+')';}).join(',');
+  var extra='';
+  if(wTab==='birthday'&&wBday){var p=wBday.split('-').map(Number);extra='生日:'+wBday+',生肖:'+getZodiac(p[0])+',星座:'+getStar(p[1],p[2])+'座';}
+  if(wTab==='mbti'&&wMbti) extra='MBTI:'+wMbti+'('+MBTI_DESC[wMbti]+')';
+  if(wTab==='combo'){if(wBday)extra+='生日:'+wBday+' ';if(wMbti)extra+='MBTI:'+wMbti;}
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,system:'你係輕鬆幽默嘅六合彩娛樂顧問。只回JSON：{"numbers":[6個1-49不重複號碼],"extra":特別號,"reason":"繁體60字，要有趣"}',messages:[{role:'user',content:'用戶：'+extra+'\n近期：'+recent+'\nTop10：'+mathTop}]})});
+    var d=await res.json();
+    if(d.error) throw new Error(d.error.message);
+    var r=JSON.parse((d.content&&d.content[0]&&d.content[0].text||'').replace(/```json|```/g,'').trim());
+    if(r.numbers&&r.numbers.length===6){
+      wResult={nums:r.numbers.sort(function(a,b){return a-b;}),extra:r.extra,details:r.numbers.map(function(n){return{n:n,labels:['🤖 AI推薦'],isExtra:false};}).concat([{n:r.extra,labels:['🤖 AI推薦'],isExtra:true}]),aiReason:r.reason,isAI:true};
+      showConfetti();showToast('🤖 AI 幸運號碼出爐！','ok');
+    } else throw new Error('格式錯誤');
+  }catch(e){showToast('❌ AI生成失敗，請重試','err');}
+  wAiLoading=false;render();
+}
+
+// ═══ HEATMAP ═══
+function renderHeatmap(){
+  var cnt={};for(var i=1;i<=49;i++)cnt[i]=0;
+  for(var i=0;i<hist.length;i++){
+    var h=hist[i];
+    if(heatMode!=='extra') for(var j=0;j<h.numbers.length;j++) cnt[h.numbers[j]]++;
+    if(heatMode!=='main') cnt[h.extra]++;
+  }
+  var mx=0;for(var n=1;n<=49;n++) if(cnt[n]>mx) mx=cnt[n];
+  var out='<div class="card accent-top" style="border-top-color:#e53935">';
+  out+='<div style="font-size:15px;font-weight:900;color:#e53935;margin-bottom:4px">🔥 號碼熱力圖</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">顏色越深 = 出現越頻繁（'+hist.length+' 期數據）</div>';
+  out+='<div class="chips">';
+  var hmodes=[['all','全部'],['main','正碼'],['extra','特別號']];
+  for(var i=0;i<hmodes.length;i++) out+='<button class="pill '+(heatMode===hmodes[i][0]?'active':'')+'" onclick="heatMode=\''+hmodes[i][0]+'\';render()">'+hmodes[i][1]+'</button>';
+  out+='</div><div class="heat-grid">';
+  for(var n=1;n<=49;n++){
+    var c=cnt[n],intensity=mx>0?c/mx:0,zc=ZC[gz(n)];
+    var alpha=Math.round(intensity*200+35).toString(16).padStart(2,'0');
+    out+='<div class="heat-cell" style="background:'+zc+alpha+';border-color:'+zc+'33;box-shadow:'+(intensity>.7?'0 2px 10px '+zc+'66':'none')+'">';
+    out+='<div class="hn" style="color:'+(intensity>.5?'#fff':'var(--text)')+'">'+n+'</div>';
+    out+='<div class="hc" style="color:'+(intensity>.5?'rgba(255,255,255,.7)':'var(--dim)')+'">'+c+'次</div></div>';
+  }
+  out+='</div></div>';
+  var ZLn={r:'🔴 紅1–10',b:'🔵 藍11–20',g:'🟢 綠21–30',o:'🟠 橙31–40',p:'🟣 紫41–49'};
+  out+='<div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🎨 色彩區域</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+  var zones=['r','b','g','o','p'];
+  for(var i=0;i<zones.length;i++){var z=zones[i];out+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:'+ZC[z]+'22;border:1px solid '+ZC[z]+'44"><span style="font-size:11px">'+ZLn[z]+'</span></div>';}
+  out+='</div></div>';
+  return out;
+}
+
+// ═══ ALARM ═══
+function renderAlarm(){
+  var nd=calcNextDraw();
+  var notifPerm=typeof Notification!=='undefined'?Notification.permission:'unavailable';
+  var PRESETS=[{l:'$800萬',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
+  var out='<div class="card accent-top">';
+  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:12px">⏰ 攪珠提醒</div>';
+  out+='<div style="background:var(--accent-bg);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px">';
+  out+='<div style="font-size:10px;color:var(--sub);margin-bottom:4px">'+nd.drawNum+' · '+nd.date+' 晚上 9:30</div>';
+  out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:34px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div>';
+  out+='<div class="chips" style="margin-bottom:14px">';
+  var amins=[10,15,30,60];
+  for(var i=0;i<amins.length;i++) out+='<button class="pill '+(alarmMins===amins[i]?'active':'')+'" onclick="alarmMins='+amins[i]+';render()">'+amins[i]+'分鐘前</button>';
+  out+='</div>';
+  out+='<button class="btn '+(alarmOn?'btn-danger':'btn-primary')+' btn-full" onclick="alarmOn=!alarmOn;alarmFired=false;render()">'+(alarmOn?'🔔 已開啟（'+alarmMins+'分鐘前）— 點此關閉':'🔔 開啟提醒')+'</button></div>';
+  out+='<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:10px">💰 頭獎金額提醒</div>';
+  out+='<div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="prize-input" placeholder="自訂門檻金額" style="flex:1;margin-bottom:0"/><button class="btn btn-ghost" onclick="setCustomPrizeThr()">設定</button></div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">';
+  for(var i=0;i<PRESETS.length;i++){var p=PRESETS[i];out+='<button onclick="prizeThr='+p.v+';prizeShown=false;render()" style="padding:9px;border-radius:10px;border:1.5px solid '+(prizeThr===p.v?'var(--accent)':'var(--border)')+';background:'+(prizeThr===p.v?'var(--accent-bg)':'var(--card)')+';color:'+(prizeThr===p.v?'var(--accent)':'var(--sub)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:left">'+(prizeThr===p.v?'✓ ':'')+p.l+'</button>';}
+  out+='</div><button class="btn '+(prizeOn?'btn-danger':'btn-success')+' btn-full" onclick="prizeOn=!prizeOn;prizeShown=false;render()">'+(prizeOn?'✅ 已開啟（≥'+fmtPrize(prizeThr)+'）— 點此關閉':'💰 開啟金額提醒')+'</button></div>';
+  out+='<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:10px">📱 推送通知</div>';
+  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--sub)">系統通知</span>';
+  out+='<span style="font-weight:700;font-size:12px;color:'+(notifPerm==='granted'?'#2e7d32':notifPerm==='denied'?'#c62828':'#f57f17')+'">'+(notifPerm==='granted'?'✅ 已允許':notifPerm==='denied'?'❌ 已拒絕':'⚠️ 未設定')+'</span></div>';
+  if(notifPerm!=='granted') out+='<button class="btn btn-ghost btn-full" onclick="requestNotif()">📲 允許推送通知</button>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-top:8px">💡 iPhone 需先在 Safari「加至主畫面」</div></div>';
+  return out;
+}
+function setCustomPrizeThr(){var v=parseInt((document.getElementById('prize-input').value||'').replace(/,/g,''));if(!isNaN(v)&&v>0){prizeThr=v;prizeShown=false;render();}}
+async function requestNotif(){if(typeof Notification==='undefined'){showToast('此瀏覽器不支援通知','err');return;}var p=await Notification.requestPermission();showToast(p==='granted'?'✅ 通知已開啟':'請允許通知',p==='granted'?'ok':'err');render();}
+
+// ═══ HISTORY ═══
+function renderHistory(){
+  var out='<div style="font-size:12px;color:var(--sub);margin-bottom:10px;font-weight:600">'+hist.length+' 期官方數據</div>';
+  for(var i=0;i<hist.length;i++){
+    var h=hist[i];
+    out+='<div class="row-item" style="'+(i===0?'background:rgba(233,30,99,.08)':'')+'">';
+    out+='<div style="min-width:62px"><div style="font-size:12px;color:var(--accent);font-weight:800">'+h.draw+'</div><div style="font-size:9px;color:var(--dim)">'+h.date+'</div></div>';
+    out+='<div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:nowrap">';
+    for(var j=0;j<h.numbers.length;j++) out+=ball(h.numbers[j],25);
+    out+=ball(h.extra,25,true)+'</div></div>';
+  }
+  return out;
+}
+
+// ═══ STATS ═══
+function renderStats(){
+  var st=calcStats(),out='';
+  out+='<div class="chips">';
+  var smodes=[['hot','🔥 熱號'],['cold','🧊 冷號'],['zone','🎨 區域'],['gap','⏳ 遺漏']];
+  for(var i=0;i<smodes.length;i++) out+='<button class="pill '+(sMode===smodes[i][0]?'active':'')+'" onclick="sMode=\''+smodes[i][0]+'\';render()">'+smodes[i][1]+'</button>';
+  out+='</div>';
+  if(sMode==='hot'){
+    var top=st.sorted.slice(0,15);
+    for(var i=0;i<top.length;i++){var n=+top[i][0],cnt=+top[i][1],c=ZC[gz(n)];out+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px"><span style="color:var(--dim);font-size:11px;width:18px;text-align:right;font-weight:600">'+(i+1)+'</span>'+ball(n,34)+'<div class="bar-track"><div class="bar-fill" style="width:'+(cnt/st.mxF*100)+'%;background:'+c+'"></div></div><span style="color:'+c+';font-size:12px;font-weight:800;min-width:32px;text-align:right">'+cnt+'次</span></div>';}
+  }
+  if(sMode==='cold'){
+    var cold=[].concat(st.sorted).reverse().slice(0,15);
+    for(var i=0;i<cold.length;i++){var n=+cold[i][0],cnt=+cold[i][1],c=ZC[gz(n)];out+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px"><span style="color:var(--dim);font-size:11px;width:18px;text-align:right;font-weight:600">'+(i+1)+'</span>'+ball(n,34,false,true)+'<div class="bar-track"><div class="bar-fill" style="width:'+(Math.max(5,cnt/st.mxF*100))+'%;background:var(--accent)"></div></div><span style="color:var(--accent);font-size:12px;font-weight:800;min-width:32px;text-align:right">'+cnt+'次</span></div>';}
+  }
+  if(sMode==='zone'){
+    var zc2={r:0,b:0,g:0,o:0,p:0},ZLn={r:'🔴 紅1–10',b:'🔵 藍11–20',g:'🟢 綠21–30',o:'🟠 橙31–40',p:'🟣 紫41–49'};
+    for(var i=0;i<hist.length;i++){for(var j=0;j<hist[i].numbers.length;j++) zc2[gz(hist[i].numbers[j])]++;zc2[gz(hist[i].extra)]++;}
+    var tot=0;for(var z in zc2) tot+=zc2[z];
+    var zones=['r','b','g','o','p'];
+    for(var i=0;i<zones.length;i++){var z=zones[i],c=ZC[z],pct=(zc2[z]/tot*100).toFixed(1);
+      out+='<div class="card" style="padding:13px;margin-bottom:9px;border-left:4px solid '+c+'"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:'+c+';font-weight:800;font-size:13px">'+ZLn[z]+'</span><span style="color:'+c+';font-weight:800">'+zc2[z]+'次 ('+pct+'%)</span></div><div style="height:7px;background:var(--track);border-radius:4px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:4px"></div></div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+      for(var n=1;n<=49;n++) if(gz(n)===z) out+=ball(n,24);
+      out+='</div></div>';
+    }
+  }
+  if(sMode==='gap'){
+    var gaps=[];for(var n in st.last) gaps.push({n:+n,idx:st.last[n]});
+    gaps.sort(function(a,b){return b.idx-a.idx;});
+    for(var i=0;i<Math.min(gaps.length,15);i++){var g=gaps[i],h2=hist[g.idx];out+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px"><span style="color:var(--dim);font-size:11px;width:18px;text-align:right;font-weight:600">'+(i+1)+'</span>'+ball(g.n,34,false,true)+'<div style="flex:1"><div style="font-size:11px;color:var(--text);font-weight:600">'+(h2?h2.draw:'')+'</div><div style="font-size:9px;color:var(--dim)">'+(h2?h2.date:'')+'</div></div><span style="background:#fff3e0;color:#e65100;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">缺'+g.idx+'期</span></div>';}
+  }
+  return out;
+}
+
+// ═══ CHECKER ═══
+function renderChecker(){
+  var l=hist[0];
+  var out='<div class="card accent-top"><div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">🔍 對照 '+l.draw+' · '+l.date+'</div>';
+  out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+ballsRow(l.numbers,l.extra,36)+'</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:10px">選擇號碼 <span style="color:var(--accent);font-weight:800">'+picked.length+'</span>/6</div>';
+  out+=grid49(picked,'togglePick',picked.length>=6);
+  out+='<div style="display:flex;gap:9px"><button class="btn btn-primary" style="flex:1" onclick="doCheck()">🔍 對獎！</button><button class="btn btn-ghost" onclick="picked=[];checkResult=null;render()">清除</button></div></div>';
+  if(checkResult){
+    out+='<div class="card" style="text-align:center;background:'+(checkResult.win?'#e8f5e9':'var(--card)')+'"><div style="font-size:26px;font-weight:900;color:'+(checkResult.win?'#2e7d32':'var(--sub)')+';margin-bottom:6px">'+checkResult.prize+'</div>';
+    out+='<div style="font-size:12px;color:var(--sub);margin-bottom:10px">命中 '+checkResult.matched.length+' 個正碼'+(checkResult.xHit?' + 特別號 ✓':'')+'</div>';
+    if(checkResult.matched.length>0||checkResult.xHit){out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">';for(var i=0;i<checkResult.matched.length;i++) out+=ball(checkResult.matched[i],38);if(checkResult.xHit) out+=ball(l.extra,38,true);out+='</div>';}
+    out+='</div>';
+  }
+  return out;
+}
+function togglePick(n){if(picked.includes(n))picked=picked.filter(function(x){return x!==n;});else if(picked.length<6)picked.push(n);checkResult=null;render();}
+function doCheck(){
+  var l=hist[0];if(picked.length<6){showToast('請先選擇 6 個號碼','err');return;}
+  var matched=picked.filter(function(n){return l.numbers.includes(n);}),xHit=picked.includes(l.extra);
+  var prize='😢 未中獎',win=false;
+  if(matched.length===6){prize='🏆 一獎！恭喜發財！';win=true;}
+  else if(matched.length===5&&xHit){prize='🥈 二獎！好勁！';win=true;}
+  else if(matched.length===5){prize='🥉 三獎！';win=true;}
+  else if(matched.length===4&&xHit){prize='🎖 四獎！';win=true;}
+  else if(matched.length===4){prize='🏅 五獎！';win=true;}
+  else if(matched.length===3&&xHit){prize='🎗 六獎！';win=true;}
+  else if(matched.length===3){prize='🎗 七獎！';win=true;}
+  checkResult={prize:prize,matched:matched,xHit:xHit,win:win};
+  if(win)showConfetti();render();
+}
+
+// ═══ MY BETS ═══
+function renderMyBets(){
+  var out='<div class="card" style="border-top:4px solid #43a047"><div style="font-size:15px;font-weight:900;color:#43a047;margin-bottom:4px">🎯 我的投注記錄</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">記錄號碼，更新數據後自動對獎。只存本機。</div>';
+  out+='<button class="btn btn-success btn-full" onclick="showAddBet=!showAddBet;render()">'+(showAddBet?'▲ 收起':'＋ 新增投注')+'</button></div>';
+  if(showAddBet){
+    out+='<div class="card"><div style="font-size:12px;font-weight:700;margin-bottom:8px">選擇 6 個號碼（'+betInput.length+'/6）</div>';
+    out+=grid49(betInput,'toggleBetPick',betInput.length>=6);
+    if(betInput.length>0){out+='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px">';for(var i=0;i<betInput.length;i++) out+=ball(betInput[i],30);out+='</div>';}
+    out+='<input type="text" id="bet-draw-input" placeholder="期號（可選）" value="'+betDraw+'" onchange="betDraw=this.value" style="margin-bottom:10px"/>';
+    out+='<input type="text" id="bet-note-input" placeholder="備注（可選）" value="'+betNote+'" onchange="betNote=this.value" style="margin-bottom:10px"/>';
+    out+='<button class="btn btn-success btn-full" onclick="addBet()" '+(betInput.length!==6?'disabled':'')+'>✅ 確認記錄</button></div>';
+  }
+  if(myBets.length===0){out+='<div class="card" style="text-align:center;color:var(--dim);font-size:14px">還沒有記錄 🎯<br/><span style="font-size:11px">快新增你的投注吧！</span></div>';}
+  else{
+    for(var i=0;i<myBets.length;i++){
+      var b=myBets[i],hDraw=null;
+      for(var j=0;j<hist.length;j++) if(hist[j].draw===b.draw){hDraw=hist[j];break;}
+      var hit=hDraw?b.numbers.filter(function(n){return hDraw.numbers.includes(n);}).length:null;
+      var xHit=hDraw?b.numbers.includes(hDraw.extra):null;
+      var pn=hit!==null?prizeName(hit,xHit):'',won=pn&&!pn.includes('未中');
+      out+='<div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      out+='<div><span style="font-size:12px;color:var(--accent);font-weight:800">'+b.draw+'</span><span style="font-size:10px;color:var(--dim);margin-left:8px">'+b.date+'</span></div>';
+      out+='<div style="display:flex;gap:6px;align-items:center">';
+      if(hDraw) out+='<span style="font-size:11px;font-weight:800;color:'+(won?'#2e7d32':'#c62828')+';background:'+(won?'#e8f5e9':'#ffebee')+';padding:2px 8px;border-radius:20px">'+pn+'</span>';
+      else out+='<span style="font-size:10px;color:var(--dim)">⏳ 待開獎</span>';
+      out+='<button onclick="deleteBet('+b.id+')" style="border:none;background:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0">🗑</button></div></div>';
+      out+='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+      for(var j=0;j<b.numbers.length;j++) out+=ball(b.numbers[j],28,false,false,!!(hDraw&&hDraw.numbers.includes(b.numbers[j])),'#43a047');
+      out+='</div>';
+      if(b.note) out+='<div style="font-size:10px;color:var(--dim);margin-top:6px">📝 '+b.note+'</div>';
+      out+='</div>';
+    }
+  }
+  return out;
+}
+function toggleBetPick(n){if(betInput.includes(n))betInput=betInput.filter(function(x){return x!==n;});else if(betInput.length<6)betInput.push(n);render();}
+function addBet(){
+  var nd=calcNextDraw();
+  var draw=(document.getElementById('bet-draw-input').value||betDraw||nd.drawNum);
+  var note=(document.getElementById('bet-note-input').value||betNote||'');
+  if(betInput.length!==6){showToast('請選擇6個號碼','err');return;}
+  var nb={id:Date.now(),draw:draw,numbers:betInput.slice().sort(function(a,b){return a-b;}),note:note,date:new Date().toLocaleDateString('zh-HK'),scored:false};
+  myBets=[nb].concat(myBets);localStorage.setItem('ms_bets',JSON.stringify(myBets));
+  betInput=[];betDraw='';betNote='';showAddBet=false;
+  showToast('✅ 已記錄！等開獎啦～','ok');render();
+}
+function deleteBet(id){myBets=myBets.filter(function(b){return b.id!==id;});localStorage.setItem('ms_bets',JSON.stringify(myBets));render();}
+function prizeName(hit,xHit){if(hit===6)return'🏆 一獎';if(hit===5&&xHit)return'🥈 二獎';if(hit===5)return'🥉 三獎';if(hit===4&&xHit)return'🎖 四獎';if(hit===4)return'🏅 五獎';if(hit===3&&xHit)return'🎗 六獎';if(hit===3)return'🎗 七獎';return'😢 未中';}
+
+// ═══ BOARD ═══
+function renderBoard(){
+  var scored=boardEntries.filter(function(e){return e.scored;}).sort(function(a,b){return b.score-a.score;});
+  var pending=boardEntries.filter(function(e){return !e.scored;});
+  var medalBg=['#ffd700','#c0c0c0','#cd7f32'];
+  var out='<div class="card" style="border-top:4px solid #f57f17"><div style="font-size:15px;font-weight:900;color:#f57f17;margin-bottom:4px">🏆 預測準確率排行榜</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px;line-height:1.7">提交你對下期的預測！命中1正碼=10分，特別號=5分。純屬娛樂！</div>';
+  out+='<button class="btn btn-gold btn-full" onclick="showAddBoard=!showAddBoard;render()">'+(showAddBoard?'▲ 收起':'🎯 提交本期預測')+'</button></div>';
+  if(showAddBoard){
+    out+='<div class="card"><input type="text" id="board-name" placeholder="你的暱稱" value="'+boardName+'" onchange="boardName=this.value"/>';
+    out+='<div style="font-size:12px;font-weight:700;margin-bottom:8px">選擇 6 個號碼（'+boardPicks.length+'/6）</div>';
+    out+=grid49(boardPicks,'toggleBoardPick',boardPicks.length>=6);
+    if(boardPicks.length>0){out+='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px">';for(var i=0;i<boardPicks.length;i++) out+=ball(boardPicks[i],30);out+='</div>';}
+    out+='<button class="btn btn-gold btn-full" onclick="addBoardEntry()" '+(!boardName.trim()||boardPicks.length!==6?'disabled':'')+'>🏆 提交預測</button></div>';
+  }
+  if(scored.length>0){
+    out+='<div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">🏆 已計分排名</div>';
+    for(var i=0;i<scored.length;i++){var e=scored[i];out+='<div class="row-item"><div style="width:28px;height:28px;border-radius:50%;background:'+(i<3?medalBg[i]:'var(--track)')+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:'+(i<3?'#fff':'var(--sub)')+';flex-shrink:0">'+(i+1)+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+e.name+'</div><div style="font-size:9px;color:var(--dim)">'+e.draw+' · 命中'+e.hit+'個'+(e.xHit?' +特':'')+'</div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">';for(var j=0;j<e.numbers.length;j++) out+=ball(e.numbers[j],20);out+='</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:18px;font-weight:900;color:#f57f17">'+e.score+'</div><div style="font-size:9px;color:var(--dim)">分</div></div></div>';}
+  }
+  if(pending.length>0){
+    out+='<div style="font-size:12px;color:var(--sub);font-weight:700;margin:12px 0 8px">⏳ 待開獎預測</div>';
+    for(var i=0;i<pending.length;i++){var e=pending[i];out+='<div class="row-item"><div style="flex:1"><div style="font-size:12px;font-weight:700">'+e.name+'</div><div style="font-size:9px;color:var(--dim)">'+e.draw+'</div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">';for(var j=0;j<e.numbers.length;j++) out+=ball(e.numbers[j],20);out+='</div></div><span style="font-size:10px;color:#f57f17;font-weight:700;background:#fff3e0;padding:3px 8px;border-radius:20px">待計分</span></div>';}
+  }
+  if(boardEntries.length===0) out+='<div class="card" style="text-align:center;color:var(--dim);font-size:14px">還沒有預測 🎯<br/><span style="font-size:11px">成為第一個預測者！</span></div>';
+  return out;
+}
+function toggleBoardPick(n){if(boardPicks.includes(n))boardPicks=boardPicks.filter(function(x){return x!==n;});else if(boardPicks.length<6)boardPicks.push(n);render();}
+function addBoardEntry(){
+  var name=(document.getElementById('board-name').value||boardName||'').trim();
+  if(!name){showToast('請輸入暱稱','err');return;}
+  if(boardPicks.length!==6){showToast('請選擇6個號碼','err');return;}
+  var nd=calcNextDraw();
+  var e={id:Date.now(),name:name,draw:nd.drawNum,numbers:boardPicks.slice().sort(function(a,b){return a-b;}),ts:new Date().toISOString(),scored:false,score:0,hit:0};
+  boardEntries=[e].concat(boardEntries).slice(0,200);
+  localStorage.setItem('ms_board',JSON.stringify(boardEntries));
+  boardPicks=[];boardName='';showAddBoard=false;
+  showToast('🎯 預測已提交！加油！','ok');render();
+}
+
+// ═══ PREDICT ═══
+var MATH_METHODS=[{key:'combined',label:'綜合評分',icon:'⚡'},{key:'golden',label:'黃金分割',icon:'φ'},{key:'fib',label:'費氏數列',icon:'∞'},{key:'gap',label:'遺漏回歸',icon:'↩'},{key:'parity',label:'奇偶平衡',icon:'⚖'},{key:'sumzone',label:'和值區間',icon:'Σ'},{key:'tail',label:'尾數分析',icon:'09'}];
+
+function renderPredict(){
+  var out='<div class="sub-tabs">';
+  var ptabs=[['math','📐 數學引擎','#e65100'],['ai','🤖 AI 預測','#6a1b9a']];
+  for(var i=0;i<ptabs.length;i++) out+='<button class="sub-tab '+(pTab===ptabs[i][0]?'active':'')+'" onclick="pTab=\''+ptabs[i][0]+'\';render()" style="'+(pTab===ptabs[i][0]?'color:'+ptabs[i][2]:'')+'">'+ptabs[i][1]+'</button>';
+  out+='</div>';
+  out+=pTab==='math'?renderMathPredict():renderAIPredict();
+  return out;
+}
+
+function renderMathPredict(){
+  var out='<div class="card" style="border-top:4px solid #e65100"><div style="font-size:14px;font-weight:900;color:#e65100;margin-bottom:14px">📐 數學預測引擎</div>';
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
+  for(var i=0;i<MATH_METHODS.length;i++){var m=MATH_METHODS[i];out+='<button onclick="mMethod=\''+m.key+'\';render()" style="padding:11px 12px;border-radius:11px;border:2px solid '+(mMethod===m.key?'#e65100':'var(--border)')+';background:'+(mMethod===m.key?'var(--accent-bg)':'var(--row)')+';cursor:pointer;text-align:left"><div style="font-size:15px;margin-bottom:3px">'+m.icon+'</div><div style="font-size:12px;font-weight:800;color:'+(mMethod===m.key?'#e65100':'var(--text)')+'">'+m.label+'</div></button>';}
+  out+='</div><button class="btn btn-gold btn-full" onclick="doMath()" '+(mLoading?'disabled':'')+'>'+(mLoading?'🔄 計算中...':'📐 開始分析')+'</button></div>';
+  if(mResult&&!mResult.error){
+    out+='<div class="result-card"><div style="font-size:11px;color:var(--dim);margin-bottom:10px;text-align:center">⚠️ 純屬娛樂，中獎係靠緣份！</div>';
+    out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">'+ballsRow(mResult.numbers,mResult.extra,50)+'</div></div>';
+    out+='<div class="card"><div style="font-size:13px;font-weight:800;margin-bottom:12px">📊 TOP 15 評分</div>';
+    for(var i=0;i<mResult.top15.length;i++){var item=mResult.top15[i],sel=mResult.numbers.includes(item.n),c=ZC[gz(item.n)];out+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span style="color:'+(sel?'var(--accent)':'var(--dim)')+';font-size:11px;width:18px;text-align:right;font-weight:700">'+(i+1)+'</span>'+ball(item.n,32,false,false,sel,sel?'var(--accent)':'')+'<div style="flex:1"><div style="height:6px;background:var(--track);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+(item.score*100)+'%;background:'+(sel?'var(--accent)':c)+';border-radius:3px"></div></div></div><div style="background:'+(sel?'var(--accent-bg)':'var(--row)')+';padding:3px 8px;border-radius:8px"><span style="font-size:12px;font-weight:800;color:'+(sel?'var(--accent)':'var(--sub)')+'">'+Math.round(item.score*100)+'</span></div></div>';}
+    out+='</div>';
+  }
+  return out;
+}
+
+function renderAIPredict(){
+  function comb(n,k){if(k>n)return 0;var r=1;for(var i=0;i<k;i++) r=r*(n-i)/(i+1);return Math.round(r);}
+  var dc=pCount-sureCt,tickets=betMode==='combination'?comb(pCount,6):betMode==='bravery'?(function(){var need=6-sureCt;if(dc<need||need<1)return 0;return comb(dc,need);})():1;
+  var out='<div class="card" style="border-top:4px solid #6a1b9a"><div style="font-size:14px;font-weight:900;color:#6a1b9a;margin-bottom:14px">🤖 AI 號碼建議</div>';
+  out+='<div class="chips" style="margin-bottom:14px">';
+  var bmodes=[['standard','🎯 普通一注'],['combination','🎲 多寶'],['bravery','🦁 膽拖']];
+  for(var i=0;i<bmodes.length;i++) out+='<button class="pill '+(betMode===bmodes[i][0]?'active':'')+'" onclick="betMode=\''+bmodes[i][0]+'\';if(betMode!==\'standard\'&&pCount<7)pCount=7;render()" style="'+(betMode===bmodes[i][0]?'border-color:#6a1b9a;background:#f3e5f5;color:#6a1b9a':'')+'">'+bmodes[i][1]+'</button>';
+  out+='</div>';
+  if(betMode!=='standard'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';for(var n=7;n<=12;n++) out+='<button onclick="pCount='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(pCount===n?'#6a1b9a':'var(--border)')+';background:'+(pCount===n?'#f3e5f5':'var(--card)')+';color:'+(pCount===n?'#6a1b9a':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
+  if(betMode==='bravery'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';for(var n=1;n<=Math.min(5,pCount-1);n++) out+='<button onclick="sureCt='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(sureCt===n?'#2e7d32':'var(--border)')+';background:'+(sureCt===n?'#e8f5e9':'var(--card)')+';color:'+(sureCt===n?'#2e7d32':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
+  out+='<div style="background:var(--row);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--sub)">'+(betMode==='standard'?'普通一注':betMode==='combination'?'C('+pCount+',6)='+comb(pCount,6)+'注':'膽'+sureCt+'拖'+dc)+'</div><div style="text-align:right"><div style="font-size:18px;font-weight:900;color:#e65100">HK$'+(tickets*10).toLocaleString()+'</div><div style="font-size:9px;color:var(--dim)">'+tickets+'注×$10</div></div></div>';
+  out+='<button class="btn btn-purple btn-full" onclick="doAI()" '+(pLoading?'disabled':'')+'>'+(pLoading?'🔮 AI 分析中...':'🔮 生成號碼建議')+'</button></div>';
+  if(aiResult){
+    if(aiResult.error) out+='<div class="card" style="text-align:center"><span style="color:#c62828;font-weight:700">❌ 生成失敗，請重試</span></div>';
+    else if(aiResult.type==='bravery'){out+='<div class="result-card"><div style="margin-bottom:12px"><div style="font-size:11px;color:#2e7d32;font-weight:800;margin-bottom:6px">膽碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.sure.length;i++) out+=ball(aiResult.sure[i],46,false,false,true,'#2e7d32');out+='</div></div><div style="margin-bottom:12px"><div style="font-size:11px;color:#e65100;font-weight:800;margin-bottom:6px">拖碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.drag.length;i++) out+=ball(aiResult.drag[i],46,false,false,true,'#e65100');out+='</div></div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
+    else{out+='<div class="result-card"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">'+ballsRow(aiResult.numbers,aiResult.extra,48)+'</div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
+  }
+  return out;
+}
+
+function doMath(){
+  mLoading=true;mResult=null;render();
+  setTimeout(function(){
+    try{
+      var ranked=runMath();
+      var sortMap={golden:function(a,b){return b.golden-a.golden;},fib:function(a,b){return b.fib-a.fib;},gap:function(a,b){return b.gap-a.gap;},parity:function(a,b){return b.parity-a.parity;},sumzone:function(a,b){return b.sum-a.sum;},tail:function(a,b){return b.tail-a.tail;}};
+      var mr=sortMap[mMethod]?ranked.slice().sort(sortMap[mMethod]):ranked;
+      var top=mr.slice(0,6).map(function(x){return x.n;}).sort(function(a,b){return a-b;});
+      var extra=ranked.slice().sort(function(a,b){return b.gap-a.gap;}).find(function(x){return !top.includes(x.n);}).n;
+      mResult={numbers:top,extra:extra,top15:mr.slice(0,15)};
+    }catch(e){mResult={error:true};}
+    mLoading=false;render();
+  },80);
+}
+
+async function doAI(){
+  var apiKey=localStorage.getItem('ms_key')||'';
+  if(!apiKey){showToast('⚙️ 請先設定 API Key','err');return;}
+  pLoading=true;aiResult=null;render();
+  var ranked=runMath();
+  var mathTop=ranked.slice(0,10).map(function(r){return r.n+'('+Math.round(r.score*100)+')';}).join(',');
+  var recent=hist.slice(0,5).map(function(h){return h.draw+':'+h.numbers.join(',')+'+特'+h.extra;}).join('|');
+  var dc=pCount-sureCt,sp,um;
+  if(betMode==='bravery'){sp='六合彩分析師。只回JSON：{"sure":['+sureCt+'個膽碼],"drag":['+dc+'個拖碼],"extra":特別號,"analysis":"繁體60字"}';um='近期:'+recent+'\nTop10:'+mathTop+'\n膽'+sureCt+'拖'+dc;}
+  else{sp='六合彩分析師。只回JSON：{"numbers":['+pCount+'個1-49不重複],"extra":特別號,"analysis":"繁體60字"}';um='近期:'+recent+'\nTop10:'+mathTop+'\n建議'+pCount+'個';}
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,system:sp,messages:[{role:'user',content:um}]})});
+    var d=await res.json();
+    if(d.error) throw new Error(d.error.message);
+    var r=JSON.parse((d.content&&d.content[0]&&d.content[0].text||'').replace(/```json|```/g,'').trim());
+    if(betMode==='bravery'){if(r.sure&&r.sure.length===sureCt&&r.drag) aiResult=Object.assign({type:'bravery'},r);else throw 0;}
+    else{if(r.numbers&&r.numbers.length===pCount) aiResult=Object.assign({type:'standard'},r);else throw 0;}
+  }catch(e){aiResult={error:true};}
+  pLoading=false;render();
+}
+
+// ═══ DISCUSS ═══
+var disqusLoaded=false;
+function renderDiscuss(){
+  var out='';
+  if(selPost){
+    out+='<button class="btn btn-ghost" onclick="selPost=null;render()" style="margin-bottom:12px">← 返回</button>';
+    out+='<div class="result-card"><div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">';
+    out+='<span style="font-size:28px">'+selPost.emoji+'</span>';
+    out+='<div><div style="font-size:15px;font-weight:900;margin-bottom:4px">'+selPost.title+'</div>';
+    out+='<div style="font-size:10px;color:var(--sub)">管理員 · '+selPost.date+(selPost.likes>0?' · ❤️'+selPost.likes:'')+'</div></div></div>';
+    out+='<div style="font-size:13px;line-height:1.9;background:var(--row);border-radius:10px;padding:14px">'+selPost.content.replace(/\n/g,'<br/>')+'</div></div>';
+    return out;
+  }
+  out+='<div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">📌 置頂公告</div>';
+  for(var i=0;i<POSTS.length;i++){
+    var p=POSTS[i];
+    if(!p.pin) continue;
+    out+='<div class="post-card pinned" onclick="selPost=POSTS['+i+'];render()">';
+    out+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+p.emoji+'</span>';
+    out+='<div style="flex:1"><div class="post-title">'+p.title+'</div><div class="post-meta">管理員 · '+p.date+(p.likes>0?' · ❤️'+p.likes:'')+'</div></div></div>';
+    out+='<div class="post-preview">'+p.content.slice(0,70)+'...</div></div>';
+  }
+  out+='<div style="font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 8px">💬 管理員討論</div>';
+  for(var i=0;i<POSTS.length;i++){
+    var p=POSTS[i];
+    if(p.pin) continue;
+    out+='<div class="post-card" onclick="selPost=POSTS['+i+'];render()">';
+    out+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">'+p.emoji+'</span>';
+    out+='<div style="flex:1"><div class="post-title">'+p.title+'</div><div class="post-meta">管理員 · '+p.date+' · ❤️'+p.likes+'</div></div></div>';
+    out+='<div class="post-preview">'+p.content.slice(0,80)+'...</div></div>';
+  }
+  out+='<div class="card" style="margin-top:4px"><div style="font-size:13px;font-weight:700;margin-bottom:4px">💬 加入討論</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px;line-height:1.7">點任何帖子可查看全文，或在下方直接留言！</div>';
+  out+='<div id="disqus_thread" style="min-height:200px"></div></div>';
+  return out;
+}
+function initDisqus(){
+  try{
+    if(disqusLoaded){if(window.DISQUS)window.DISQUS.reset({reload:true,config:function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';}});return;}
+    disqusLoaded=true;
+    window.disqus_config=function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';};
+    var s=document.createElement('script');s.src='https://'+DISQUS_SHORTNAME+'.disqus.com/embed.js';s.async=true;
+    s.onerror=function(){var el=document.getElementById('disqus_thread');if(el)el.innerHTML='<div style="padding:14px;color:var(--sub);font-size:12px;text-align:center">💬 留言功能載入中，請稍後重試</div>';};
+    document.head.appendChild(s);
+  }catch(e){}
+}
+// ── Init ──
+window.onerror = function(msg, src, line, col, err) {
+  const c = document.getElementById('content');
+  if(c) c.innerHTML = '<div style="padding:20px;background:#ffebee;border-radius:12px;color:#c62828;font-size:12px;line-height:2">' +
+    '<strong>JS Error:</strong><br/>' + msg + '<br/>Line: ' + line + '<br/>' + (err?err.stack:'') + '</div>';
+  return false;
+};
+try {
+  updateHeader();
+  initLucky();
+  // Test: write directly to content first
+render();
+} catch(e) {
+  const c = document.getElementById('content');
+  if(c) c.innerHTML = '<div style="padding:20px;background:#ffebee;border-radius:12px;color:#c62828;font-size:12px;line-height:2">' +
+    '<strong>Init Error:</strong><br/>' + e.message + '<br/>' + e.stack + '</div>';
+}
+
+</script>
+</body>
+</html>
