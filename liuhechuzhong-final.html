@@ -544,42 +544,54 @@ function triggerAlarm(type){
 
 // ── Refresh ──
 let refreshLog = [];
-async function doRefresh(){
-  const btn=document.getElementById('refresh-btn');
-  if(btn){btn.disabled=true;btn.textContent='🔄 更新中...';}
+function doRefresh(){
   refreshLog=['🔄 連接 Cloudflare Worker...'];
-  renderRefreshLog();
-  try{
-    const _ctrl=new AbortController();
-    const _timer=setTimeout(()=>_ctrl.abort(),15000);
-    const res=await fetch(WORKER_URL,{signal:_ctrl.signal});
-    clearTimeout(_timer);
-    if(!res.ok)throw new Error(`HTTP ${res.status}`);
-    refreshLog.push('✅ 連接成功，解析數據...');
-    renderRefreshLog();
-    const text=await res.text();
-    const rows=parseHK(text);
-    if(rows.length>0){
-      const merged=[...rows,...hist].reduce((acc,h)=>{if(!acc.find(x=>x.draw===h.draw))acc.push(h);return acc;},[]).sort((a,b)=>b.draw.localeCompare(a.draw));
-      hist=merged;updateHeader();
-      refreshLog.push(`✅ 成功更新 ${rows.length} 期`,`📊 最新：${merged[0].draw}（${merged[0].date}）`,`🎱 ${merged[0].numbers.join(',')} 特：${merged[0].extra}`);
-      renderRefreshLog();
-      showToast(`✅ 更新成功！${merged[0].draw}: ${merged[0].numbers.join(',')} 特${merged[0].extra}`,'ok',6000);
-      showConfetti();
-      render();
+  render(); // re-render to show "更新中..." button state
+  var refreshing=true;
+  
+  // Use XHR for better iOS compatibility
+  var xhr=new XMLHttpRequest();
+  var timer=setTimeout(function(){
+    if(refreshing){xhr.abort();refreshLog=['❌ 連接超時（15秒）','請檢查網絡或稍後再試'];render();}
+  },15000);
+  
+  xhr.onload=function(){
+    clearTimeout(timer);
+    refreshing=false;
+    if(xhr.status>=200&&xhr.status<300){
+      refreshLog.push('✅ 連接成功，解析數據...');
+      var text=xhr.responseText;
+      var rows=parseHK(text);
+      if(rows.length>0){
+        var merged=rows.concat(hist).filter(function(h,idx,arr){
+          return arr.findIndex(function(x){return x.draw===h.draw;})=== idx;
+        }).sort(function(a,b){return b.draw>a.draw?1:-1;});
+        hist=merged;
+        refreshLog.push('✅ 成功更新 '+rows.length+' 期');
+        refreshLog.push('📊 最新：'+merged[0].draw+'（'+merged[0].date+'）');
+        refreshLog.push('🎱 '+merged[0].numbers.join(',')+'  特：'+merged[0].extra);
+        showToast('✅ 更新成功！'+merged[0].draw,'ok',5000);
+        showConfetti();
+      } else {
+        var preview=(text.match(/([1-9]|[1-4][0-9])/g)||[]).slice(0,15).join(',');
+        refreshLog.push('⚠️ 解析失敗，號碼預覽：'+preview.slice(0,50));
+        showToast('⚠️ 數據抓到但解析失敗','err');
+      }
     } else {
-      var previewNums=text.match(/\b([1-9]|[1-4][0-9])\b/g);
-        var preview=previewNums?previewNums.slice(0,20).join(','):'無';
-        refreshLog.push('⚠️ 解析失敗 (找到'+rows.length+'期)，號碼預覽:'+preview.slice(0,60));
-      renderRefreshLog();
-      showToast('⚠️ 數據抓到但格式有變','err');
+      refreshLog.push('❌ HTTP錯誤：'+xhr.status);
+      showToast('❌ 更新失敗','err');
     }
-  }catch(e){
-    refreshLog.push(`❌ 失敗：${e.message}`,'請確認 Worker 已部署');
-    renderRefreshLog();
-    showToast(`❌ 更新失敗：${e.message}`,'err');
-  }
-  if(btn){btn.disabled=false;btn.textContent='🔄 更新最新官方數據';}
+    render();
+  };
+  xhr.onerror=function(){
+    clearTimeout(timer);
+    refreshing=false;
+    refreshLog=['❌ 網絡錯誤，請檢查連接'];
+    showToast('❌ 網絡錯誤','err');
+    render();
+  };
+  xhr.open('GET',WORKER_URL,true);
+  xhr.send();
 }
 
 function parseHK(text){
@@ -716,7 +728,8 @@ function renderLatest(){
   out+='<span style="font-size:11px;color:var(--accent);font-weight:700">⏰ 攪珠倒數</span>';
   out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div></div>';
 
-  out+='<button id="refresh-btn" class="btn btn-primary btn-full" onclick="doRefresh()" style="margin-bottom:6px;background:linear-gradient(135deg,var(--accent),#ff6090)">🔄 更新最新官方數據</button>';
+  var isRefreshing=refreshLog.length>0&&refreshLog[0]==='🔄 連接 Cloudflare Worker...';
+  out+='<button id="refresh-btn" class="btn btn-primary btn-full" onclick="'+(isRefreshing?'':'doRefresh()')+'" style="margin-bottom:6px;background:linear-gradient(135deg,var(--accent),#ff6090);opacity:'+(isRefreshing?'0.7':'1')+'">'+(isRefreshing?'🔄 更新中...':'🔄 更新最新官方數據')+'</button>';
   out+='<div id="refresh-log" style="background:var(--row);border-radius:10px;padding:10px;margin-bottom:10px;border:1px solid var(--border);display:'+(refreshLog.length?'block':'none')+'"></div>';
   out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:14px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in 😅</span></div>';
 
