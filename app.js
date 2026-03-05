@@ -307,12 +307,36 @@ async function doRefresh(){
 }
 
 function parseHK(text){
-  const rows=[];
-  const pat=/\|\s*(\d{2}\/\d{3})\s*\|\s*(\d{2})\/(\d{2})\/(\d{4})\s*\|\s*((?:\*\s*\d+\s*)+)\|/g;
-  let m;while((m=pat.exec(text))!==null){
-    const draw=m[1],date=`${m[4]}-${m[3]}-${m[2]}`,nums=m[5].match(/\d+/g);
-    if(nums&&nums.length>=7)rows.push({draw,date,numbers:nums.slice(0,6).map(Number).sort((a,b)=>a-b),extra:Number(nums[6])});
-  }
+  var rows=[];
+  try{
+    // Try multiple patterns to extract lottery results
+    var lines=text.split('\n');
+    for(var i=0;i<lines.length;i++){
+      var line=lines[i];
+      // Pattern: draw number like 26/021
+      var dm=line.match(/(\d{2}\/\d{3})/);
+      if(!dm) continue;
+      var draw=dm[1];
+      // Find numbers in nearby lines
+      var chunk=lines.slice(i,i+5).join(' ');
+      var nums=chunk.match(/\b([1-9]|[1-3][0-9]|4[0-9])\b/g);
+      // Find date
+      var dateM=chunk.match(/(\d{4})-(\d{2})-(\d{2})|(\d{2})\/(\d{2})\/(\d{4})/);
+      var date='';
+      if(dateM){
+        if(dateM[1]) date=dateM[1]+'-'+dateM[2]+'-'+dateM[3];
+        else date=dateM[6]+'-'+dateM[5]+'-'+dateM[4];
+      }
+      if(nums&&nums.length>=7&&date){
+        var uniq=[],seen={};
+        for(var j=0;j<nums.length;j++){var n=parseInt(nums[j]);if(n>=1&&n<=49&&!seen[n]){seen[n]=true;uniq.push(n);}}
+        if(uniq.length>=7){
+          var main=uniq.slice(0,6).sort(function(a,b){return a-b;});
+          rows.push({draw:draw,date:date,numbers:main,extra:uniq[6]});
+        }
+      }
+    }
+  }catch(e){}
   return rows;
 }
 
@@ -517,6 +541,42 @@ function renderWorkshop(){
 function setWTab(t){wTab=t;wResult=null;render();}
 function toggleMBTI(m){wMbti=wMbti===m?'':m;render();}
 function toggleMethod(k){wSources[k]=!wSources[k];render();}
+function doWorkshop(){
+  var src=Object.assign({},wSources);
+  if(wTab==='birthday'){src.birthday=true;src.mbti=false;}
+  else if(wTab==='mbti'){src.birthday=false;src.mbti=true;}
+  else{src.birthday=!!wBday;src.mbti=!!wMbti;}
+  if(wTab==='birthday'&&!wBday){showToast('👆 請先選擇你的生日','err');return;}
+  if(wTab==='mbti'&&!wMbti){showToast('👆 請先選擇你的 MBTI','err');return;}
+  if(wTab==='combo'&&!wBday&&!wMbti){showToast('👆 生日或MBTI至少填一個','err');return;}
+  var noMethod=!src.birthday&&!src.mbti&&!src.golden&&!src.fib&&!src.gap&&!src.hot&&!src.cold;
+  if(noMethod){showToast('👆 請至少選一個配方方法','err');return;}
+  wResult=Object.assign(runWorkshop(wBday,wMbti,src),{isAI:false});
+  showConfetti();showToast('🎉 你的幸運號碼出爐！','ok');render();
+}
+
+async function doWorkshopAI(){
+  var apiKey=localStorage.getItem('ms_key')||'';
+  if(!apiKey){showToast('⚙️ 請先設定 API Key','err');return;}
+  wAiLoading=true;render();
+  var recent=hist.slice(0,6).map(function(h){return h.draw+':'+h.numbers.join(',')+'+特'+h.extra;}).join('|');
+  var mathTop=runMath().slice(0,10).map(function(r){return r.n+'('+Math.round(r.score*100)+')';}).join(',');
+  var extra='';
+  if(wTab==='birthday'&&wBday){var p=wBday.split('-').map(Number);extra='生日:'+wBday+',生肖:'+getZodiac(p[0])+',星座:'+getStar(p[1],p[2])+'座';}
+  if(wTab==='mbti'&&wMbti) extra='MBTI:'+wMbti+'('+MBTI_DESC[wMbti]+')';
+  if(wTab==='combo'){if(wBday)extra+='生日:'+wBday+' ';if(wMbti)extra+='MBTI:'+wMbti;}
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,system:'你係輕鬆幽默嘅六合彩娛樂顧問。只回JSON：{"numbers":[6個1-49不重複號碼],"extra":特別號,"reason":"繁體60字，要有趣"}',messages:[{role:'user',content:'用戶：'+extra+'\n近期：'+recent+'\nTop10：'+mathTop}]})});
+    var d=await res.json();
+    if(d.error) throw new Error(d.error.message);
+    var r=JSON.parse((d.content&&d.content[0]&&d.content[0].text||'').replace(/```json|```/g,'').trim());
+    if(r.numbers&&r.numbers.length===6){
+      wResult={nums:r.numbers.sort(function(a,b){return a-b;}),extra:r.extra,details:r.numbers.map(function(n){return{n:n,labels:['🤖 AI推薦'],isExtra:false};}).concat([{n:r.extra,labels:['🤖 AI推薦'],isExtra:true}]),aiReason:r.reason,isAI:true};
+      showConfetti();showToast('🤖 AI 幸運號碼出爐！','ok');
+    } else throw new Error('格式錯誤');
+  }catch(e){showToast('❌ AI生成失敗，請重試','err');}
+  wAiLoading=false;render();
+}
 
 // ═══ HEATMAP ═══
 function renderHeatmap(){
@@ -869,10 +929,14 @@ function renderDiscuss(){
   return out;
 }
 function initDisqus(){
-  if(disqusLoaded){if(window.DISQUS)window.DISQUS.reset({reload:true,config:function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';}});return;}
-  disqusLoaded=true;
-  window.disqus_config=function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';};
-  var s=document.createElement('script');s.src='https://'+DISQUS_SHORTNAME+'.disqus.com/embed.js';s.async=true;document.head.appendChild(s);
+  try{
+    if(disqusLoaded){if(window.DISQUS)window.DISQUS.reset({reload:true,config:function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';}});return;}
+    disqusLoaded=true;
+    window.disqus_config=function(){this.page.url=window.location.href;this.page.identifier='liuhechuzhong-discuss';};
+    var s=document.createElement('script');s.src='https://'+DISQUS_SHORTNAME+'.disqus.com/embed.js';s.async=true;
+    s.onerror=function(){var el=document.getElementById('disqus_thread');if(el)el.innerHTML='<div style="padding:14px;color:var(--sub);font-size:12px;text-align:center">💬 留言功能載入中，請稍後重試</div>';};
+    document.head.appendChild(s);
+  }catch(e){}
 }
 // ── Init ──
 window.onerror = function(msg, src, line, col, err) {
