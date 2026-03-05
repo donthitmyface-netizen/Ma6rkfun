@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Worker Test</title>
+<style>body{font-family:monospace;padding:16px;background:#fff5f8}button{padding:12px 20px;background:#e91e63;color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;display:block;width:100%;margin-bottom:10px}#log{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:11px;line-height:1.8;white-space:pre-wrap;min-height:80px;word-break:break-all}</style>
+</head>
+<body>
+<h2>🔧 解析診斷</h2>
+<button onclick="runTest()">🔍 抓取並診斷解析</button>
+<div id="log">按按鈕開始...</div>
+<script>
+var WORKER='https://ma6rkfun.donthitmyface.workers.dev';
+var log=document.getElementById('log');
+function add(msg){log.textContent+='\n'+msg;console.log(msg);}
+
+function runTest(){
+  log.textContent='抓取中...';
+  fetch(WORKER).then(function(r){return r.text();}).then(function(text){
+    add('✅ 收到 '+text.length+' bytes');
+    
+    // Step 1: Parse HTML
+    var parser=new DOMParser();
+    var doc=parser.parseFromString(text,'text/html');
+    var body=doc.body;
+    add('body exists: '+(!!body));
+    
+    // Step 2: Get text content
+    var fullText=body?body.textContent:'';
+    add('textContent length: '+fullText.length);
+    
+    // Step 3: Find draw numbers
+    var drawMatches=fullText.match(/\d{2}\/\d{3}/g)||[];
+    add('Draw numbers found: '+drawMatches.length);
+    add('First 5 draws: '+drawMatches.slice(0,5).join(', '));
+    
+    // Step 4: Find dates
+    var dateMatches=fullText.match(/\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi)||[];
+    add('Dates found: '+dateMatches.length);
+    add('First 3 dates: '+dateMatches.slice(0,3).join(' | '));
+    
+    // Step 5: Show text around first draw number
+    var firstDraw=fullText.indexOf(drawMatches[0]);
+    if(firstDraw>=0){
+      var ctx=fullText.slice(Math.max(0,firstDraw-50),firstDraw+200).replace(/\s+/g,' ');
+      add('\nContext around "'+drawMatches[0]+'":');
+      add(ctx);
+    }
+    
+    // Step 6: Lines analysis
+    var lines=fullText.split('\n').map(function(l){return l.trim();}).filter(function(l){return l;});
+    add('\nTotal non-empty lines: '+lines.length);
+    // Find lines near a draw number
+    for(var i=0;i<lines.length;i++){
+      if(/^\d{2}\/\d{3}$/.test(lines[i])){
+        add('\nFound draw line at index '+i+': "'+lines[i]+'"');
+        add('Next 10 lines: '+JSON.stringify(lines.slice(i+1,i+11)));
+        break;
+      }
+    }
+    
+  }).catch(function(e){add('❌ '+e.message);});
+}
+</script>
+</body></html>
