@@ -585,72 +585,45 @@ async function doRefresh(){
 function parseHK(text){
   var rows=[];
   try{
-    // Parse lottery.hk HTML using DOMParser
     var parser=new DOMParser();
     var doc=parser.parseFromString(text,'text/html');
-
-    // lottery.hk uses table rows with draw data
-    // Each row has: draw number, date, 6 main numbers, 1 extra number
-    // Try multiple selectors for robustness
+    var body=doc.body;
+    if(!body) return rows;
+    var fullText=body.textContent||body.innerText||'';
     
-    // Method 1: look for table rows containing draw numbers like "26/021"
-    var allText=doc.body?doc.body.innerHTML:'';
+    // Split into lines, find draw numbers like "26/021"
+    var lines=fullText.replace(/\t/g,' ').split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
     
-    // Extract all draw blocks using regex on the HTML
-    // Pattern: draw number XX/XXX followed by date and numbers
-    var drawPattern=/(\d{2}\/\d{3})/g;
-    var fullText=doc.body?doc.body.innerText||doc.body.textContent:'';
-    var lines=fullText.split(/[\n\r]+/).map(function(l){return l.trim();}).filter(function(l){return l;});
+    var MONTHS={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12'};
     
-    var i=0;
-    while(i<lines.length){
-      var line=lines[i];
-      var drawMatch=line.match(/^(\d{2}\/\d{3})$/);
-      if(drawMatch){
-        var draw=drawMatch[1];
-        // Look ahead for date and numbers
-        var chunk=lines.slice(i,i+15).join(' ');
-        // Date: various formats
-        var dateM=chunk.match(/(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
-        var date='';
-        if(dateM){
-          var months={january:'01',february:'02',march:'03',april:'04',may:'05',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12'};
-          var m=months[dateM[2].toLowerCase()]||'01';
-          var d=dateM[1].padStart(2,'0');
-          date=dateM[3]+'-'+m+'-'+d;
-        }
-        // Numbers 1-49
-        var numMatches=chunk.match(/\b([1-9]|[1-4][0-9])\b/g);
-        if(numMatches&&date){
-          var uniq=[],seen={};
-          for(var j=0;j<numMatches.length;j++){
-            var n=parseInt(numMatches[j]);
-            if(n>=1&&n<=49&&!seen[n]){seen[n]=true;uniq.push(n);}
-          }
-          if(uniq.length>=7){
-            rows.push({draw:draw,date:date,numbers:uniq.slice(0,6).sort(function(a,b){return a-b;}),extra:uniq[6]});
-          }
-        }
+    for(var i=0;i<lines.length&&rows.length<30;i++){
+      if(!/^\d{2}\/\d{3}$/.test(lines[i])) continue;
+      var draw=lines[i];
+      // Look at next 20 lines for date and numbers
+      var chunk=lines.slice(i+1,i+20).join(' ');
+      
+      // Find English date: "24 February 2026"
+      var dm=chunk.match(/(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
+      if(!dm) continue;
+      var mon=MONTHS[dm[2].toLowerCase()];
+      var date=dm[3]+'-'+mon+'-'+dm[1].padStart(2,'0');
+      
+      // Find exactly 7 numbers 1-49 in the chunk
+      var found=[];
+      var seen={};
+      var parts=chunk.split(/[^0-9]+/);
+      for(var j=0;j<parts.length;j++){
+        if(!parts[j]) continue;
+        var n=parseInt(parts[j],10);
+        if(n>=1&&n<=49&&!seen[n]){seen[n]=true;found.push(n);}
+        if(found.length>=7) break;
       }
-      i++;
-    }
-    
-    // Method 2: if method 1 failed, try regex on raw HTML
-    if(rows.length===0){
-      var m2,pat2=/(\d{2}\/\d{3})[^<]*<[^>]*>([^<]*\d{4}[^<]*)<[^>]*>((?:<[^>]*>\s*\d+\s*<\/[^>]*>\s*){7,})/g;
-      // Fallback: just find all groups of 7 numbers near a draw code
-      var pat3=/(\d{2}\/\d{3})(?:[\s\S]{0,300}?)((?:\b(?:[1-9]|[1-4][0-9])\b[,\s]+){6}\b(?:[1-9]|[1-4][0-9])\b)/g;
-      var m3;
-      while((m3=pat3.exec(text))!==null&&rows.length<20){
-        var nums2=m3[2].match(/\b([1-9]|[1-4][0-9])\b/g);
-        if(nums2&&nums2.length>=7){
-          var u2=[],s2={};
-          for(var j=0;j<nums2.length;j++){var n=parseInt(nums2[j]);if(n>=1&&n<=49&&!s2[n]){s2[n]=true;u2.push(n);}}
-          if(u2.length>=7) rows.push({draw:m3[1],date:'2026-02-24',numbers:u2.slice(0,6).sort(function(a,b){return a-b;}),extra:u2[6]});
-        }
+      if(found.length>=7){
+        var main=found.slice(0,6).sort(function(a,b){return a-b;});
+        rows.push({draw:draw,date:date,numbers:main,extra:found[6]});
       }
     }
-  }catch(e){console.log('parseHK error:',e);}
+  }catch(e){}
   return rows;
 }
 
