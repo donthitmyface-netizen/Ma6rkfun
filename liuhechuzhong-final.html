@@ -838,10 +838,12 @@ function renderLatest(){
   out+='<div style="background:linear-gradient(135deg,#fff8e1,#fff3e0);border:1px solid #ffcc80;border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
   out+='<div style="font-size:13px;font-weight:900;color:#e65100;margin-bottom:4px">☕ 支持開發者</div>';
   out+='<div style="font-size:10px;color:#bf360c;margin-bottom:10px">App 完全免費 · 如果覺得好用，請作者飲杯咖啡！</div>';
-  out+='<div style="display:flex;gap:8px;justify-content:center">';
-  var _kofi=localStorage.getItem('ms_kofi')||'https://ko-fi.com';
-  out+='<a href="'+_kofi+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#FF5E5B;color:#fff;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none">☕ Ko-fi 打賞</a>';
-  out+='<button onclick="showPayMe()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#e91e63;border:2px solid #e91e63;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer">📱 PayMe / FPS</button>';
+  out+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
+  out+='<a href="https://payme.hsbc/kennylai18" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;border-radius:20px;padding:10px 18px;font-size:13px;font-weight:700;text-decoration:none">💳 一按即 PayMe！</a>';
+  var _kofi=localStorage.getItem('ms_kofi')||'';
+  if(_kofi) out+='<a href="'+_kofi+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#FF5E5B;color:#fff;border-radius:20px;padding:10px 18px;font-size:13px;font-weight:700;text-decoration:none">☕ Ko-fi</a>';
+  var _fps=localStorage.getItem('ms_fps')||'';
+  if(_fps) out+='<button onclick="showPayMe()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#e91e63;border:2px solid #e91e63;border-radius:20px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">📱 FPS</button>';
   out+='</div></div>';
 
   // 廣告位（預留，可日後填入廣告代碼）
@@ -951,6 +953,11 @@ function renderWorkshop(){
     out+='</div>';
     out+='<div style="background:var(--row);border-radius:12px;padding:12px;margin-bottom:12px;font-size:10px;color:var(--dim);line-height:1.8;text-align:center">ℹ️ 號碼由所選配方演算生成，純屬娛樂參考。<br/><span style="color:var(--accent);font-weight:700">中咗係緣份，唔中繼續玩！😄</span></div>';
   }
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 function setWTab(t){wTab=t;wResult=null;render();}
@@ -1033,6 +1040,11 @@ function renderHeatmap(){
   var zones=['r','b','g','o','p'];
   for(var i=0;i<zones.length;i++){var z=zones[i];out+='<div style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:'+ZC[z]+'22;border:1px solid '+ZC[z]+'44"><span style="font-size:11px">'+ZLn[z]+'</span></div>';}
   out+='</div></div>';
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 
@@ -1061,6 +1073,11 @@ function renderAlarm(){
   out+='<span style="font-weight:700;font-size:12px;color:'+(notifPerm==='granted'?'#2e7d32':notifPerm==='denied'?'#c62828':'#f57f17')+'">'+(notifPerm==='granted'?'✅ 已允許':notifPerm==='denied'?'❌ 已拒絕':'⚠️ 未設定')+'</span></div>';
   if(notifPerm!=='granted') out+='<button class="btn btn-ghost btn-full" onclick="requestNotif()">📲 允許推送通知</button>';
   out+='<div style="font-size:10px;color:var(--dim);margin-top:8px">💡 iPhone 需先在 Safari「加至主畫面」</div></div>';
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 function setCustomPrizeThr(){var v=parseInt((document.getElementById('prize-input').value||'').replace(/,/g,''));if(!isNaN(v)&&v>0){prizeThr=v;prizeShown=false;render();}}
@@ -1077,6 +1094,11 @@ function renderHistory(){
     for(var j=0;j<h.numbers.length;j++) out+=ball(h.numbers[j],25);
     out+=ball(h.extra,25,true)+'</div></div>';
   }
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 
@@ -1111,6 +1133,11 @@ function renderStats(){
     gaps.sort(function(a,b){return b.idx-a.idx;});
     for(var i=0;i<Math.min(gaps.length,15);i++){var g=gaps[i],h2=hist[g.idx];out+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px"><span style="color:var(--dim);font-size:11px;width:18px;text-align:right;font-weight:600">'+(i+1)+'</span>'+ball(g.n,34,false,true)+'<div style="flex:1"><div style="font-size:11px;color:var(--text);font-weight:600">'+(h2?h2.draw:'')+'</div><div style="font-size:9px;color:var(--dim)">'+(h2?h2.date:'')+'</div></div><span style="background:#fff3e0;color:#e65100;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">缺'+g.idx+'期</span></div>';}
   }
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 
@@ -1128,6 +1155,11 @@ function renderChecker(){
     if(checkResult.matched.length>0||checkResult.xHit){out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">';for(var i=0;i<checkResult.matched.length;i++) out+=ball(checkResult.matched[i],38);if(checkResult.xHit) out+=ball(l.extra,38,true);out+='</div>';}
     out+='</div>';
   }
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 function togglePick(n){if(picked.includes(n))picked=picked.filter(function(x){return x!==n;});else if(picked.length<6)picked.push(n);checkResult=null;render();}
@@ -1180,6 +1212,11 @@ function renderMyBets(){
       out+='</div>';
     }
   }
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 function toggleBetPick(n){if(betInput.includes(n))betInput=betInput.filter(function(x){return x!==n;});else if(betInput.length<6)betInput.push(n);render();}
@@ -1220,6 +1257,11 @@ function renderBoard(){
     for(var i=0;i<pending.length;i++){var e=pending[i];out+='<div class="row-item"><div style="flex:1"><div style="font-size:12px;font-weight:700">'+e.name+'</div><div style="font-size:9px;color:var(--dim)">'+e.draw+'</div><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">';for(var j=0;j<e.numbers.length;j++) out+=ball(e.numbers[j],20);out+='</div></div><span style="font-size:10px;color:#f57f17;font-weight:700;background:#fff3e0;padding:3px 8px;border-radius:20px">待計分</span></div>';}
   }
   if(boardEntries.length===0) out+='<div class="card" style="text-align:center;color:var(--dim);font-size:14px">還沒有預測 🎯<br/><span style="font-size:11px">成為第一個預測者！</span></div>';
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 function toggleBoardPick(n){if(boardPicks.includes(n))boardPicks=boardPicks.filter(function(x){return x!==n;});else if(boardPicks.length<6)boardPicks.push(n);render();}
@@ -1244,6 +1286,11 @@ function renderPredict(){
   for(var i=0;i<ptabs.length;i++) out+='<button class="sub-tab '+(pTab===ptabs[i][0]?'active':'')+'" onclick="pTab=\''+ptabs[i][0]+'\';render()" style="'+(pTab===ptabs[i][0]?'color:'+ptabs[i][2]:'')+'">'+ptabs[i][1]+'</button>';
   out+='</div>';
   out+=pTab==='math'?renderMathPredict():renderAIPredict();
+  
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
   return out;
 }
 
@@ -1329,7 +1376,12 @@ function renderDiscuss(){
     out+='<div><div style="font-size:15px;font-weight:900;margin-bottom:4px">'+selPost.title+'</div>';
     out+='<div style="font-size:10px;color:var(--sub)">管理員 · '+selPost.date+(selPost.likes>0?' · ❤️'+selPost.likes:'')+'</div></div></div>';
     out+='<div style="font-size:13px;line-height:1.9;background:var(--row);border-radius:10px;padding:14px">'+selPost.content.replace(/\n/g,'<br/>')+'</div></div>';
-    return out;
+    
+  // 廣告位
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';
+  return out;
   }
   out+='<div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px">📌 置頂公告</div>';
   for(var i=0;i<POSTS.length;i++){
