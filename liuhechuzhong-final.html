@@ -215,7 +215,13 @@ body.pastel{
 <div id="settings-modal">
   <div class="modal-box">
     <div style="font-size:16px;font-weight:900;color:#e91e63;margin-bottom:4px">⚙️ API Key 設定</div>
-    <div style="font-size:11px;color:#757575;margin-bottom:16px;line-height:1.9">填入 Anthropic API Key 啟用 AI 功能。<br/>申請：<span style="color:#e91e63">console.anthropic.com</span>（免費）<br/>每次約 HK$0.01 · 其他功能完全免費</div>
+    <div style="font-size:11px;color:#757575;margin-bottom:16px;line-height:1.9">選擇 AI 提供商並填入 API Key 啟用 AI 預測功能。</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px" id="ai-provider-tabs">
+      <button onclick="setAIProvider('anthropic')" id="prov-anthropic" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer">Claude</button>
+      <button onclick="setAIProvider('deepseek')" id="prov-deepseek" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">DeepSeek</button>
+      <button onclick="setAIProvider('grok')" id="prov-grok" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">Grok</button>
+    </div>
+    <div id="ai-provider-hint" style="font-size:10px;color:var(--sub);margin-bottom:8px">console.anthropic.com · 每次約HK$0.01</div>
     <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="margin-bottom:16px"/>
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">儲存</button>
@@ -464,11 +470,8 @@ function runWorkshop(bday, mbti, sources){
 
 // ── Discussion posts ──
 const POSTS=[
-  {id:'r1',pin:true,emoji:'📌',title:'社群規則 & 免責聲明',date:'2026-01-01',likes:0,content:'本討論區純屬娛樂交流。任何號碼分析均為統計參考，不構成投注建議。六合彩結果完全隨機，請量力而為，理性娛樂。未成年人士不得投注。如有沉迷賭博問題，請致電賭博輔導熱線 1800-6-668668。'},
-  {id:'r2',pin:true,emoji:'🎓',title:'【玩法攻略】號碼工坊怎麼用？',date:'2026-01-15',likes:88,content:'號碼工坊係本App最好玩嘅功能！\n\n🎂 生日派：輸入你的生日，系統根據生肖+星座+生日數字生成號碼，每個號碼都話你知點解佢係「你的號碼」。\n\n🧠 MBTI派：16種人格各有傾向，不知道自己係咩MBTI？去 16personalities.com 測一下！\n\n🎂+🧠 混合派：兩者結合，仲可以加方法加持，自由配搭！'},
-  {id:'r3',pin:true,emoji:'🔥',title:'你係邊款MBTI？你的號碼係咩？',date:'2026-01-20',likes:142,content:'管理員係 ENFP，號碼工坊幫我選出了 4, 14, 25, 36, 47, 9。\n\n大家用完號碼工坊後覺得準唔準？分享一下你係咩MBTI，生成咗咩號碼！\n\n留言區歡迎討論！（需要 Disqus 帳號）'},
-  {id:'r4',pin:false,emoji:'💡',title:'熱力圖觀察：37號係今年超熱號！',date:'2026-02-01',likes:56,content:'用熱力圖睇咗一下，37號今年出現次數超高！26/021 有、26/018 有、26/017 有...\n\n大家點睇？係真係熱號，定係已經太熱會降溫？'},
-  {id:'r5',pin:false,emoji:'📊',title:'【統計觀察】近12期正碼分析',date:'2026-02-10',likes:34,content:'近期發現幾個規律：\n\n1. 20-30號區近期出現偏少\n2. 37號連續多期出現，係今年最熱單號\n3. 連號近期較多，可以留意\n\n大家有咩觀察？'},
+  {id:'r1',pin:true,emoji:'📌',title:'免責聲明',date:'2026-01-01',likes:0,content:'本應用程式（六合常中）純屬娛樂性質。\n\n所有號碼分析、預測及推薦均為統計學參考，並不構成任何投注建議。六合彩開獎結果完全隨機，任何分析方法均無法預測結果。\n\n本應用程式與香港賽馬會及任何官方機構無關聯。請量力而為，理性娛樂。未成年人士不得投注。\n\n如有沉迷賭博問題，請致電賭博輔導熱線：1800-6-668668（免費）'},
+  {id:'r2',pin:true,emoji:'⚖️',title:'法律責任聲明',date:'2026-01-01',likes:0,content:'使用本應用程式即表示您同意以下條款：\n\n1. 本應用程式提供之所有資訊僅供娛樂參考，不構成投注建議。\n\n2. 開發者對任何因使用本應用程式資訊而導致之投注損失概不負責。\n\n3. 用戶須自行承擔一切投注風險及法律責任。\n\n4. 本應用程式不儲存用戶個人資料於伺服器，所有數據僅儲存於用戶裝置本地。\n\n5. 本應用程式保留隨時修改或終止服務之權利，恕不另行通知。'},
 ];
 
 // ── Toast ──
@@ -556,7 +559,8 @@ function doRefresh(){
   xhr.onreadystatechange=function(){
     if(xhr.readyState!==4) return;
     if(xhr.status===0){
-      refreshLog=['❌ 網絡錯誤（status 0）'];
+      refreshLog=['❌ 網絡錯誤（status 0）- CORS被阻擋？'];
+      showToast('❌ 網絡錯誤 status 0','err',8000);
       render(); return;
     }
     if(xhr.status!==200){
@@ -584,7 +588,8 @@ function doRefresh(){
         showToast('⚠️ 數據有誤','err');
       }
     }catch(e){
-      refreshLog=['❌ 解析錯誤: '+e.message,'原始: '+xhr.responseText.slice(0,80)];
+      refreshLog=['❌ 解析錯誤: '+e.message,'原始回應: '+xhr.responseText.slice(0,120)];
+      showToast('❌ '+e.message,'err',8000);
     }
     render();
   };
@@ -683,9 +688,45 @@ function grid49(selected, onToggleFn, maxed=false){
 }
 
 // ── Settings ──
-function openSettings(){document.getElementById('settings-modal').classList.add('open');document.getElementById('api-key-input').value=localStorage.getItem('ms_key')||'';}
+function openSettings(){
+  document.getElementById('settings-modal').classList.add('open');
+  var prov=localStorage.getItem('ms_ai_provider')||'anthropic';
+  setAIProvider(prov,true);
+  document.getElementById('api-key-input').value=localStorage.getItem('ms_key_'+prov)||'';
+}
+function setAIProvider(p,silent){
+  localStorage.setItem('ms_ai_provider',p);
+  ['anthropic','deepseek','grok'].forEach(function(id){
+    var btn=document.getElementById('prov-'+id);
+    if(!btn)return;
+    var active=id===p;
+    btn.style.background=active?'var(--accent)':'var(--card)';
+    btn.style.color=active?'#fff':'var(--text)';
+    btn.style.borderColor=active?'var(--accent)':'var(--border)';
+  });
+  var hints={anthropic:'console.anthropic.com · 每次約HK$0.01',deepseek:'platform.deepseek.com · 超低成本，性價比極高！',grok:'console.x.ai · xAI 出品，有免費額度'};
+  var placeholders={anthropic:'sk-ant-api03-...',deepseek:'sk-...',grok:'xai-...'};
+  var h=document.getElementById('ai-provider-hint');
+  var inp=document.getElementById('api-key-input');
+  if(h)h.textContent=hints[p]||'';
+  if(inp){inp.placeholder=placeholders[p]||'API Key...';if(!silent)inp.value=localStorage.getItem('ms_key_'+p)||'';}
+}
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
-function saveApiKey(){localStorage.setItem('ms_key',document.getElementById('api-key-input').value.trim());showToast('✅ API Key 已儲存','ok');closeSettings();}
+function showPWAGuide(){
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  var isAndroid=/Android/.test(navigator.userAgent);
+  if(isIOS) showToast('📱 Safari底部「分享」→「加至主畫面」即可安裝！','ok',6000);
+  else if(isAndroid) showToast('📱 Chrome右上角「⋮」→「加至主畫面」即可安裝！','ok',6000);
+  else showToast('📱 請用手機瀏覽器打開此頁面安裝','ok',5000);
+}
+function saveApiKey(){
+  var prov=localStorage.getItem('ms_ai_provider')||'anthropic';
+  var key=document.getElementById('api-key-input').value.trim();
+  localStorage.setItem('ms_key_'+prov,key);
+  localStorage.setItem('ms_key',key); // backward compat
+  showToast('✅ '+prov+' API Key 已儲存','ok');
+  closeSettings();
+}
 
 // ── Tab render ──
 function switchTab(t){
@@ -880,29 +921,40 @@ function doWorkshop(){
 }
 
 async function doWorkshopAI(){
-  var apiKey=localStorage.getItem('ms_key')||'';
-  if(!apiKey){showToast('⚙️ 請先設定 API Key','err');return;}
+  var prov=localStorage.getItem('ms_ai_provider')||'anthropic';
+  var key=localStorage.getItem('ms_key_'+prov)||localStorage.getItem('ms_key')||'';
+  if(!key){showToast('請先在⚙️設定 '+prov+' API Key','err');return;}
   wAiLoading=true;render();
-  var recent=hist.slice(0,6).map(function(h){return h.draw+':'+h.numbers.join(',')+'+特'+h.extra;}).join('|');
-  var mathTop=runMath().slice(0,10).map(function(r){return r.n+'('+Math.round(r.score*100)+')';}).join(',');
-  var extra='';
-  if(wTab==='birthday'&&wBday){var p=wBday.split('-').map(Number);extra='生日:'+wBday+',生肖:'+getZodiac(p[0])+',星座:'+getStar(p[1],p[2])+'座';}
-  if(wTab==='mbti'&&wMbti) extra='MBTI:'+wMbti+'('+MBTI_DESC[wMbti]+')';
-  if(wTab==='combo'){if(wBday)extra+='生日:'+wBday+' ';if(wMbti)extra+='MBTI:'+wMbti;}
+  var recent=hist.slice(0,10).map(function(h){return h.draw+': '+h.numbers.join(',')+'  特'+h.extra;}).join('\n');
+  var prompt='你是六合彩分析師。近10期開獎:\n'+recent+'\n\n請推薦6個正碼(1-49)和1個特別號，用JSON格式回覆，只返回JSON不要其他文字：{"numbers":[n1,n2,n3,n4,n5,n6],"extra":n7,"reason":"分析理由50字內"}';
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,system:'你係輕鬆幽默嘅六合彩娛樂顧問。只回JSON：{"numbers":[6個1-49不重複號碼],"extra":特別號,"reason":"繁體60字，要有趣"}',messages:[{role:'user',content:'用戶：'+extra+'\n近期：'+recent+'\nTop10：'+mathTop}]})});
-    var d=await res.json();
-    if(d.error) throw new Error(d.error.message);
-    var r=JSON.parse((d.content&&d.content[0]&&d.content[0].text||'').replace(/```json|```/g,'').trim());
-    if(r.numbers&&r.numbers.length===6){
-      wResult={nums:r.numbers.sort(function(a,b){return a-b;}),extra:r.extra,details:r.numbers.map(function(n){return{n:n,labels:['🤖 AI推薦'],isExtra:false};}).concat([{n:r.extra,labels:['🤖 AI推薦'],isExtra:true}]),aiReason:r.reason,isAI:true};
-      showConfetti();showToast('🤖 AI 幸運號碼出爐！','ok');
-    } else throw new Error('格式錯誤');
-  }catch(e){showToast('❌ AI生成失敗，請重試','err');}
+    var result=null;
+    if(prov==='anthropic'){
+      var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});
+      var d=await r.json();
+      result=d.content&&d.content[0]?d.content[0].text:'';
+    } else if(prov==='deepseek'){
+      var r=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'deepseek-chat',max_tokens:300,messages:[{role:'user',content:prompt}]})});
+      var d=await r.json();
+      result=d.choices&&d.choices[0]?d.choices[0].message.content:'';
+    } else if(prov==='grok'){
+      var r=await fetch('https://api.x.ai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'grok-3-mini',max_tokens:300,messages:[{role:'user',content:prompt}]})});
+      var d=await r.json();
+      result=d.choices&&d.choices[0]?d.choices[0].message.content:'';
+    }
+    if(!result) throw new Error('無回應');
+    var clean=result.replace(/```json|```/g,'').trim();
+    var parsed=JSON.parse(clean);
+    var nums=parsed.numbers.filter(function(n){return n>=1&&n<=49;}).slice(0,6);
+    var extra=parsed.extra;
+    if(nums.length===6&&extra>=1&&extra<=49){
+      wResult={nums:nums.sort(function(a,b){return a-b;}),extra:extra,aiReason:parsed.reason||'',isAI:true,details:[]};
+      showConfetti();showToast('🤖 AI推薦出爐！','ok');
+    } else throw new Error('號碼格式錯誤');
+  }catch(e){showToast('❌ AI失敗: '+e.message,'err');}
   wAiLoading=false;render();
 }
 
-// ═══ HEATMAP ═══
 function renderHeatmap(){
   var cnt={};for(var i=1;i<=49;i++)cnt[i]=0;
   for(var i=0;i<hist.length;i++){
