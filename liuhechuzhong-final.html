@@ -227,6 +227,14 @@ body.pastel{
       <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">儲存</button>
       <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
     </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">💰 打賞設定</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:6px">Ko-fi 網址</div>
+      <input id="kofi-input" type="text" placeholder="https://ko-fi.com/你的名字" style="margin-bottom:8px"/>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:6px">FPS 電話/電郵</div>
+      <input id="fps-input" type="text" placeholder="98765432 或 yourname@email.com" style="margin-bottom:8px"/>
+      <button class="btn btn-primary" onclick="saveDonationSettings()" style="width:100%">💾 儲存打賞設定</button>
+    </div>
   </div>
 </div>
 
@@ -693,6 +701,10 @@ function openSettings(){
   var prov=localStorage.getItem('ms_ai_provider')||'anthropic';
   setAIProvider(prov,true);
   document.getElementById('api-key-input').value=localStorage.getItem('ms_key_'+prov)||'';
+  var kofiEl=document.getElementById('kofi-input');
+  var fpsEl=document.getElementById('fps-input');
+  if(kofiEl) kofiEl.value=localStorage.getItem('ms_kofi')||'';
+  if(fpsEl) fpsEl.value=localStorage.getItem('ms_fps')||'';
 }
 function setAIProvider(p,silent){
   localStorage.setItem('ms_ai_provider',p);
@@ -712,6 +724,30 @@ function setAIProvider(p,silent){
   if(inp){inp.placeholder=placeholders[p]||'API Key...';if(!silent)inp.value=localStorage.getItem('ms_key_'+p)||'';}
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function saveDonationSettings(){
+  localStorage.setItem('ms_kofi', document.getElementById('kofi-input').value.trim());
+  localStorage.setItem('ms_fps', document.getElementById('fps-input').value.trim());
+  showToast('✅ 打賞設定已儲存','ok');
+  closeSettings();
+}
+function showPayMe(){
+  var fps=localStorage.getItem('ms_fps')||'';
+  var kofi=localStorage.getItem('ms_kofi')||'';
+  var fpsHtml=fps
+    ?'<div style="font-size:16px;font-weight:900;color:#333;margin:8px 0">'+fps+'</div>'
+    +'<div style="font-size:10px;color:#999">在轉數快輸入以上號碼</div>'
+    :'<div style="font-size:12px;color:#999">請在⚙️設定填入 FPS 號碼</div>';
+  var modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML='<div style="background:var(--card);border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center">'
+    +'<div style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px">📱 PayMe / FPS 打賞</div>'
+    +'<div style="font-size:11px;color:var(--sub);margin-bottom:16px">感謝支持！每分打賞都是對開發者最大的鼓勵 ☕</div>'
+    +'<div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:12px">'+fpsHtml+'</div>'
+    +(kofi?'<a href="'+kofi+'" target="_blank" style="display:block;width:100%;padding:10px;background:#FF5E5B;color:#fff;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;margin-bottom:8px;box-sizing:border-box">☕ Ko-fi 打賞</a>':'')
+    +'<button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:var(--border);color:var(--text);border:none;border-radius:12px;font-size:14px;cursor:pointer">關閉</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
 function showPWAGuide(){
   var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
   var isAndroid=/Android/.test(navigator.userAgent);
@@ -740,6 +776,11 @@ document.getElementById('tabs').addEventListener('click',function(e){
   const btn=e.target.closest('.tab-btn');
   if(btn)switchTab(btn.dataset.tab);
 });
+
+// Auto-refresh on startup
+setTimeout(function(){
+  doRefresh();
+}, 1500);
 
 // ── MAIN RENDER ──
 function render(){
@@ -778,25 +819,33 @@ function renderLatest(){
   out+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
   out+='<div><div style="font-size:12px;color:#f57f17;font-weight:800">⏳ 下期 '+nd.drawNum+'</div>';
   out+='<div style="font-size:11px;color:var(--sub)">'+nd.date+' · 晚上 9:30</div></div>';
-  out+='<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:#e65100">'+fmtPrize(curPrize)+'</div>';
+  out+='<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:#e65100">$8百萬起</div>';
   out+='<div style="font-size:9px;color:var(--dim)">估計頭獎</div></div></div>';
-
-  var PRESETS=[8e6,3e7,5e7,1e8,1.5e8,2e8];
-  var PLABELS=['$800萬','$3千萬','$5千萬','$1億','$1.5億','$2億'];
-  out+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
-  for(var pi=0;pi<PRESETS.length;pi++){
-    var active=curPrize===PRESETS[pi];
-    out+='<button onclick="setPrize('+PRESETS[pi]+')" style="padding:4px 9px;border-radius:20px;border:1.5px solid '+(active?'#f57f17':'var(--border)')+';background:'+(active?'#fff8e1':'var(--card)')+';color:'+(active?'#e65100':'var(--sub)')+';font-size:10px;cursor:pointer;font-weight:'+(active?700:400)+'">'+PLABELS[pi]+'</button>';
-  }
-  out+='</div>';
   out+='<div style="background:rgba(233,30,99,.1);border:1px solid rgba(233,30,99,.2);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
   out+='<span style="font-size:11px;color:var(--accent);font-weight:700">⏰ 攪珠倒數</span>';
   out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:26px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div></div>';
 
-  var isRefreshing=refreshLog.length>0&&refreshLog[0]==='🔄 連接 Cloudflare Worker...';
-  out+='<button id="refresh-btn" class="btn btn-primary btn-full" onclick="'+(isRefreshing?'':'doRefresh()')+'" style="margin-bottom:6px;background:linear-gradient(135deg,var(--accent),#ff6090);opacity:'+(isRefreshing?'0.7':'1')+'">'+(isRefreshing?'🔄 更新中...':'🔄 更新最新官方數據')+'</button>';
-  out+='<div id="refresh-log" style="background:var(--row);border-radius:10px;padding:10px;margin-bottom:10px;border:1px solid var(--border);display:'+(refreshLog.length?'block':'none')+'"></div>';
-  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:14px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in 😅</span></div>';
+  // Auto-refresh status indicator
+  if(refreshLog.length>0){
+    var logColor=refreshLog[0].startsWith('✅')?'#2e7d32':refreshLog[0].startsWith('❌')?'#c62828':'var(--sub)';
+    out+='<div style="font-size:10px;color:'+logColor+';text-align:center;margin-bottom:6px">'+refreshLog[0]+'</div>';
+  }
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:10px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in 😅</span></div>';
+
+  // 打賞區
+  out+='<div style="background:linear-gradient(135deg,#fff8e1,#fff3e0);border:1px solid #ffcc80;border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
+  out+='<div style="font-size:13px;font-weight:900;color:#e65100;margin-bottom:4px">☕ 支持開發者</div>';
+  out+='<div style="font-size:10px;color:#bf360c;margin-bottom:10px">App 完全免費 · 如果覺得好用，請作者飲杯咖啡！</div>';
+  out+='<div style="display:flex;gap:8px;justify-content:center">';
+  var _kofi=localStorage.getItem('ms_kofi')||'https://ko-fi.com';
+  out+='<a href="'+_kofi+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#FF5E5B;color:#fff;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none">☕ Ko-fi 打賞</a>';
+  out+='<button onclick="showPayMe()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#e91e63;border:2px solid #e91e63;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer">📱 PayMe / FPS</button>';
+  out+='</div></div>';
+
+  // 廣告位（預留，可日後填入廣告代碼）
+  out+='<div id="ad-slot" style="min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
+  out+='</div>';'''
 
   out+='<div style="font-size:13px;color:var(--sub);font-weight:700;margin-bottom:8px">📜 近期開獎</div>';
   for(var i=0;i<Math.min(hist.length,6);i++){
@@ -810,7 +859,6 @@ function renderLatest(){
   }
   return out;
 }
-function setPrize(p){curPrize=p;render();}
 
 // ═══ WORKSHOP ═══
 var W_METHODS=[
