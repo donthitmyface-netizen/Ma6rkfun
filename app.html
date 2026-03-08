@@ -1,4 +1,4 @@
-<!-- v20260309c -->
+<!-- v20260309d -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -1554,6 +1554,37 @@ function renderFortune(){
   });
   out+='</div></div>';
 
+  // ══ 5b. 天時地利人和 ══
+  var lucky7=calcLucky7Days();
+  if(lucky7&&lucky7.length>0){
+    var curMood=parseInt(localStorage.getItem('ms_mood')||'70');
+    var moodColor=curMood>=75?'#2e7d32':curMood>=55?'#f57f17':'#c62828';
+    out+='<div class="card" style="margin-bottom:10px">';
+    out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">&#x1F5D3;&#xFE0F; 未來7天購彩吉日</div>';
+    out+='<div style="font-size:10px;color:var(--dim)">天時（干支）+ 人和（心情）推算 Top 3</div></div>';
+    out+='<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+moodColor+'">'+curMood+'</div>';
+    out+='<div style="font-size:9px;color:var(--dim)">人和分</div></div></div>';
+    var medals7=['🥇','🥈','🥉'];
+    lucky7.slice(0,3).forEach(function(day,i){
+      var sc=day.total,scC=sc>=80?'#2e7d32':sc>=60?'#f57f17':'#c62828';
+      out+='<div style="background:'+(i===0?'var(--accent-bg)':'var(--row)')+';border-radius:12px;padding:12px;margin-bottom:8px;border:'+(i===0?'1.5px solid var(--accent)':'none')+'">';
+      out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+      out+='<div style="font-size:14px;font-weight:900">'+medals7[i]+' '+day.dateStr+' <span style="font-size:11px;color:var(--sub)">'+day.ganzhi+'</span></div>';
+      out+='<div style="font-size:20px;font-weight:900;color:'+scC+'">'+sc+'分</div></div>';
+      out+='<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">';
+      out+='<span style="background:rgba(255,105,144,0.15);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px">&#x2600;&#xFE0F; 天時 '+day.tianshi+'</span>';
+      out+='<span style="background:rgba(0,150,136,0.1);color:#00796b;border-radius:6px;padding:2px 8px;font-size:10px">&#x2764;&#xFE0F; 人和 '+day.renhe+'</span>';
+      out+='<span style="background:rgba(255,152,0,0.1);color:#e65100;border-radius:6px;padding:2px 8px;font-size:10px">'+(day.isDrawDay?'&#x1F3B1; 攪珠日':'非攪珠日')+'</span>';
+      out+='</div>';
+      out+='<div style="font-size:11px;color:var(--sub)">'+day.advice+'</div>';
+      out+='</div>';
+    });
+    out+='<button class="btn btn-primary btn-full" style="margin-top:6px" onclick="showMoodCheck()">&#x1F3AF; 更新心情分數 · 重新推算</button>';
+    out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-top:4px">心情分數影響吉日排名</div>';
+    out+='</div>';
+  }
+
   // ══ 6. 幸運號碼 ══
   out+='<div class="card" style="margin-bottom:10px">';
   out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:4px">🍀 今日幸運號碼</div>';
@@ -1605,38 +1636,13 @@ function renderAlarm(){
   out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:4px">加入日曆後，每次攪珠前 1 小時手機自動彈出提示</div>';
   out+='</div>';
 
-  // ── 吉日推算卡（需要生日）──
-  if(userProfile&&userProfile.date){
-    var lucky7=calcLucky7Days();
-    out+='<div class="card" style="margin-bottom:10px">';
-    out+='<div style="font-size:14px;font-weight:900;color:var(--accent);margin-bottom:4px">🗓️ 未來7天最佳購彩吉日</div>';
-    out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">天時（干支相合）+ 人和（心情）自動推算，Top 3 吉日</div>';
-    if(lucky7&&lucky7.length>0){
-      var medals=['🥇','🥈','🥉'];
-      lucky7.slice(0,3).forEach(function(d,i){
-        var scoreColor=d.total>=80?'#2e7d32':d.total>=60?'#f57f17':'#c62828';
-        out+='<div style="background:var(--row);border-radius:12px;padding:12px;margin-bottom:8px">';
-        out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-        out+='<div style="font-size:14px;font-weight:900">'+medals[i]+' '+d.dateStr+' <span style="font-size:11px;color:var(--sub)">'+d.ganzhi+'</span></div>';
-        out+='<div style="font-size:18px;font-weight:900;color:'+scoreColor+'">'+d.total+'分</div></div>';
-        out+='<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">';
-        out+='<span style="background:rgba(255,105,144,0.15);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px">☀️ 天時 '+d.tianshi+'</span>';
-        out+='<span style="background:rgba(0,150,136,0.1);color:#00796b;border-radius:6px;padding:2px 8px;font-size:10px">❤️ 人和 '+d.renhe+'</span>';
-        out+='<span style="background:rgba(255,152,0,0.1);color:#e65100;border-radius:6px;padding:2px 8px;font-size:10px">'+d.isFriday+'</span>';
-        out+='</div>';
-        out+='<div style="font-size:11px;color:var(--sub)">'+d.advice+'</div>';
-        out+='</div>';
-      });
-      out+='<button class="btn btn-ghost btn-full" onclick="showMoodCheck()" style="margin-top:4px">🎯 做心情測驗更新人和分數</button>';
-    } else {
-      out+='<div style="text-align:center;padding:16px;color:var(--dim)">計算中...</div>';
-    }
-    out+='</div>';
-  } else {
-    out+='<div class="card" style="text-align:center;padding:20px;margin-bottom:10px">';
-    out+='<div style="font-size:11px;color:var(--sub)">💡 輸入生日後可查看未來7天最佳購彩吉日</div>';
-    out+='<button class="btn btn-ghost" style="margin-top:10px" onclick="editProfile()">✨ 輸入生日</button></div>';
-  }
+  // ── 吉日推算已移至運程 tab ──
+  out+='<div class="card" style="text-align:center;margin-bottom:10px;padding:20px">';
+  out+='<div style="font-size:28px;margin-bottom:8px">&#x1F5D3;&#xFE0F;</div>';
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:6px">未來7天購彩吉日推算</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">天時（干支相合/沖）× 人和（心情測驗）<br>已移至&#x1F52E;運程 tab，連同完整命盤一起查看</div>';
+  out+="<button class=\"btn btn-primary\" onclick=\"switchTab('fortune')\">&#x1F52E; 前往運程 tab 查看吉日</button>";
+  out+='</div>';
 
   // ── 如何運作 ──
   out+='<div class="card">';
