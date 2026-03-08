@@ -1,4 +1,4 @@
-<!-- v20260308 -->
+<!-- v20260309c -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -446,21 +446,20 @@ const MBTI_LUCKY={INTJ:[7,14,21,35,42,49],INTP:[3,11,22,33,44,8],ENTJ:[1,10,19,2
 const MBTI_DESC={INTJ:'建築師🏛',INTP:'邏輯學家🧪',ENTJ:'指揮官⚔',ENTP:'辯論家💡',INFJ:'提倡者🌿',INFP:'調停者🌙',ENFJ:'主人公🌟',ENFP:'競選者🎨',ISTJ:'物流師📋',ISFJ:'守護者🛡',ESTJ:'總經理💼',ESFJ:'執政官👑',ISTP:'鑑賞家🔧',ISFP:'探險家🦋',ESTP:'企業家🚀',ESFP:'表演者🎭'};
 const MBTI_TRAIT={INTJ:'獨特冷門派',INTP:'質數奇數派',ENTJ:'強勢頭號派',ENTP:'冷門組合派',INFJ:'直覺引導派',INFP:'跟感覺走派',ENFJ:'熱情熱號派',ENFP:'隨心所欲派',ISTJ:'跟統計走派',ISFJ:'保守穩陣派',ESTJ:'嚴格數據派',ESFJ:'人氣大眾派',ISTP:'工程師分析派',ISFP:'美感直覺派',ESTP:'高風險回報派',ESFP:'最活躍玩家派'};
 function getZodiac(y,m,d){
-  // PRIMARY: iztro handles CNY edge cases internally (accurate lunar calendar)
+  // Use iztro for accurate zodiac (correct CNY boundary handling)
   try{
     if(typeof iztro!=='undefined'&&iztro.astro){
       var pad=function(n){return n<10?'0'+n:''+n;};
       var ab=iztro.astro.bySolar(y+'-'+pad(m)+'-'+pad(d),0,'男',true,'zh-TW');
       if(ab&&ab.zodiac){
-        // iztro returns Traditional Chinese zodiac names
-        var map={'鼠':'鼠','牛':'牛','虎':'虎','兔':'兔','龍':'龍','蛇':'蛇',
-                 '馬':'馬','羊':'羊','猴':'猴','雞':'雞','狗':'狗','豬':'豬',
-                 // Simplified variants
-                 '龙':'龍','鸡':'雞','猪':'豬'};
-        return map[ab.zodiac]||ab.zodiac;
+        // Normalise simplified→traditional
+        var norm={'龙':'龍','鸡':'雞','猪':'豬',
+                  '鼠':'鼠','牛':'牛','虎':'虎','兔':'兔','龍':'龍','蛇':'蛇',
+                  '马':'馬','馬':'馬','羊':'羊','猴':'猴','狗':'狗'};
+        return norm[ab.zodiac]||ab.zodiac;
       }
     }
-  }catch(e){}
+  }catch(e){ console.warn('iztro zodiac err:',e); }
   return _getZodiacFallback(y,m,d);
 }
 
@@ -506,7 +505,7 @@ function runWorkshop(bday, mbti, sources){
   for(let n=1;n<=49;n++){scoreMap[n]=0;labelMap[n]=[];}
   if(sources.birthday && bday){
     const[yr,mo,dy]=bday.split('-').map(Number);
-    const zodiac=getZodiac(yr),star=getStar(mo,dy);
+    const zodiac=getZodiac(yr,mo,dy),star=getStar(mo,dy);
     const zl=ZODIAC_LUCKY[zodiac]||[],sl=STAR_LUCKY[star]||[];
     const bdNums=new Set([...zl,...sl,dy%49||49,mo%49||1,(yr%49)||7]);
     const seed=yr+mo*100+dy;
@@ -1132,6 +1131,8 @@ var W_METHODS=[
 ];
 
 function renderWorkshop(){
+  // Auto-populate from saved profile if workshop birthday is empty
+  if(!wBday&&userProfile&&userProfile.date) wBday=userProfile.date;
   var bdayParsed=null;
   if(wBday){var p=wBday.split('-').map(Number);bdayParsed={yr:p[0],mo:p[1],dy:p[2],z:getZodiac(p[0],p[1],p[2]),s:getStar(p[1],p[2])};}
   var out='';
