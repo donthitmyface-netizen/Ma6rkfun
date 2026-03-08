@@ -1,4 +1,4 @@
-<!-- v20260309d -->
+<!-- v20260309e -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -1561,7 +1561,7 @@ function renderFortune(){
     var moodColor=curMood>=75?'#2e7d32':curMood>=55?'#f57f17':'#c62828';
     out+='<div class="card" style="margin-bottom:10px">';
     out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
-    out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">&#x1F5D3;&#xFE0F; 未來7天購彩吉日</div>';
+    out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">🗓️ 未來7天購彩吉日</div>';
     out+='<div style="font-size:10px;color:var(--dim)">天時（干支）+ 人和（心情）推算 Top 3</div></div>';
     out+='<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+moodColor+'">'+curMood+'</div>';
     out+='<div style="font-size:9px;color:var(--dim)">人和分</div></div></div>';
@@ -1573,14 +1573,14 @@ function renderFortune(){
       out+='<div style="font-size:14px;font-weight:900">'+medals7[i]+' '+day.dateStr+' <span style="font-size:11px;color:var(--sub)">'+day.ganzhi+'</span></div>';
       out+='<div style="font-size:20px;font-weight:900;color:'+scC+'">'+sc+'分</div></div>';
       out+='<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">';
-      out+='<span style="background:rgba(255,105,144,0.15);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px">&#x2600;&#xFE0F; 天時 '+day.tianshi+'</span>';
-      out+='<span style="background:rgba(0,150,136,0.1);color:#00796b;border-radius:6px;padding:2px 8px;font-size:10px">&#x2764;&#xFE0F; 人和 '+day.renhe+'</span>';
-      out+='<span style="background:rgba(255,152,0,0.1);color:#e65100;border-radius:6px;padding:2px 8px;font-size:10px">'+(day.isDrawDay?'&#x1F3B1; 攪珠日':'非攪珠日')+'</span>';
+      out+='<span style="background:rgba(255,105,144,0.15);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px">☀️ 天時 '+day.tianshi+'</span>';
+      out+='<span style="background:rgba(0,150,136,0.1);color:#00796b;border-radius:6px;padding:2px 8px;font-size:10px">❤️ 人和 '+day.renhe+'</span>';
+      out+='<span style="background:rgba(255,152,0,0.1);color:#e65100;border-radius:6px;padding:2px 8px;font-size:10px">'+(day.isDrawDay?'🎱 攪珠日':'非攪珠日')+'</span>';
       out+='</div>';
       out+='<div style="font-size:11px;color:var(--sub)">'+day.advice+'</div>';
       out+='</div>';
     });
-    out+='<button class="btn btn-primary btn-full" style="margin-top:6px" onclick="showMoodCheck()">&#x1F3AF; 更新心情分數 · 重新推算</button>';
+    out+='<button class="btn btn-primary btn-full" style="margin-top:6px" onclick="showMoodCheck()">🎯 更新心情分數 · 重新推算</button>';
     out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-top:4px">心情分數影響吉日排名</div>';
     out+='</div>';
   }
@@ -1638,10 +1638,10 @@ function renderAlarm(){
 
   // ── 吉日推算已移至運程 tab ──
   out+='<div class="card" style="text-align:center;margin-bottom:10px;padding:20px">';
-  out+='<div style="font-size:28px;margin-bottom:8px">&#x1F5D3;&#xFE0F;</div>';
+  out+='<div style="font-size:28px;margin-bottom:8px">🗓️</div>';
   out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:6px">未來7天購彩吉日推算</div>';
-  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">天時（干支相合/沖）× 人和（心情測驗）<br>已移至&#x1F52E;運程 tab，連同完整命盤一起查看</div>';
-  out+="<button class=\"btn btn-primary\" onclick=\"switchTab('fortune')\">&#x1F52E; 前往運程 tab 查看吉日</button>";
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">天時（干支相合/沖）× 人和（心情測驗）<br>已移至🔮運程 tab，連同完整命盤一起查看</div>';
+  out+="<button class=\"btn btn-primary\" onclick=\"switchTab('fortune')\">🔮 前往運程 tab 查看吉日</button>";
   out+='</div>';
 
   // ── 如何運作 ──
@@ -1657,6 +1657,134 @@ function renderAlarm(){
 
   out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center"><span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
   return out;
+}
+
+function addPrizeReminder(){
+  prizeOn=true;render();
+  var draws=[];
+  var nd=calcNextDraw();
+  var d=new Date(nd.date+'T21:30:00+08:00');
+  var drawDays=[2,4,6];
+  for(var i=0;i<10;i++){
+    draws.push(new Date(d));
+    d=new Date(d);d.setDate(d.getDate()+1);
+    while(!drawDays.includes(d.getDay()))d.setDate(d.getDate()+1);
+  }
+  var lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Ma6rkFun//HK Lottery//TC','CALSCALE:GREGORIAN'];
+  draws.forEach(function(dt,i){
+    var pad=function(n){return('0'+n).slice(-2);};
+    var dtStr=dt.getFullYear()+''+pad(dt.getMonth()+1)+''+pad(dt.getDate())+'T133000Z';
+    var alarmStr=dt.getFullYear()+''+pad(dt.getMonth()+1)+''+pad(dt.getDate())+'T123000Z';
+    lines.push('BEGIN:VEVENT');
+    lines.push('DTSTART:'+dtStr);
+    lines.push('DTEND:'+dtStr);
+    lines.push('SUMMARY:🎱六合彩今晚攪珠！記得買票');
+    lines.push('DESCRIPTION:頭獎門檻 '+fmtPrize(prizeThr)+' · 今晚9:30攪珠');
+    lines.push('BEGIN:VALARM');
+    lines.push('TRIGGER:-PT60M');
+    lines.push('ACTION:DISPLAY');
+    lines.push('DESCRIPTION:🎱 六合彩攪珠提醒！一小時後開獎，記得購票');
+    lines.push('END:VALARM');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  var blob=new Blob([lines.join('\r\n')],{type:'text/calendar'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='lottery-reminders.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📅 日曆提醒已下載！打開 .ics 加入日曆','ok',4000);
+}
+
+function calcLucky7Days(){
+  if(!userProfile||!userProfile.date)return[];
+  var bdate=new Date(userProfile.date);
+  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
+  var zodiac=getZodiac(by,bm,bd);
+  var stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var branches=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  var elements=['木','木','火','火','土','土','金','金','水','水'];
+  var sixCombine={子:'丑',丑:'子',寅:'亥',亥:'寅',卯:'戌',戌:'卯',辰:'酉',酉:'辰',巳:'申',申:'巳',午:'未',未:'午'};
+  var threeHarmony={子:['辰','申'],丑:['巳','酉'],寅:['午','戌'],卯:['亥','未'],辰:['子','申'],巳:['丑','酉'],午:['寅','戌'],未:['卯','亥'],申:['子','辰'],酉:['丑','巳'],戌:['午','寅'],亥:['卯','未']};
+  var sixClash={子:'午',午:'子',丑:'未',未:'丑',寅:'申',申:'寅',卯:'酉',酉:'卯',辰:'戌',戌:'辰',巳:'亥',亥:'巳'};
+  var zodiacBranch={'鼠':'子','牛':'丑','虎':'寅','兔':'卯','龍':'辰','蛇':'巳','馬':'午','羊':'未','猴':'申','雞':'酉','狗':'戌','豬':'亥'};
+  var myBranch=zodiacBranch[zodiac]||'子';
+  var birthElement=elements[(by-1900+200)%10];
+  var elemScore={木:{木:65,火:85,土:50,金:40,水:90},火:{木:85,火:65,土:80,金:45,水:35},土:{木:45,火:80,土:65,金:85,水:45},金:{木:40,火:45,土:80,金:65,水:85},水:{木:90,火:35,土:45,金:80,水:65}};
+  var moodScore=parseInt(localStorage.getItem('ms_mood')||'70');
+  var results=[];
+  var today=new Date();
+  for(var i=1;i<=7;i++){
+    var d=new Date(today);d.setDate(today.getDate()+i);
+    var ds=Math.floor((d-new Date('1900-01-31'))/86400000);
+    var dStem=stems[((ds%10)+10)%10];
+    var dBranch=branches[((ds%12)+12)%12];
+    var dElement=elements[((ds%10)+10)%10];
+    var tianshi=50;
+    if(sixCombine[myBranch]===dBranch)tianshi+=25;
+    if(threeHarmony[myBranch]&&threeHarmony[myBranch].includes(dBranch))tianshi+=20;
+    if(sixClash[myBranch]===dBranch)tianshi-=25;
+    var eScore=(elemScore[birthElement]&&elemScore[birthElement][dElement])||65;
+    tianshi+=Math.round((eScore-65)/3);
+    tianshi=Math.min(99,Math.max(20,tianshi));
+    var renhe=Math.min(99,Math.max(30,moodScore+Math.round(Math.sin(i*1.3)*8)));
+    var dow=d.getDay();
+    var isDrawDay=(dow===2||dow===4||dow===6);
+    var seed=by+bm+bd+i;
+    var total=Math.round(tianshi*0.5+renhe*0.35+(isDrawDay?12:0)+((seed%10)-5));
+    total=Math.min(99,Math.max(25,total));
+    var advices={h1:'天時人和俱佳，攪珠之日！今天購彩，天地支持！',h0:'干支大吉之日，心情最佳，可提前購彩準備！',m1:'攪珠日，運勢平穩，量力而為，可小試。',m0:'干支平穩，調整狀態，為下次攪珠做準備。',l1:'六沖之日，攪珠日不利，建議跳過此期。',l0:'運勢稍弱，靜待更佳時機。'};
+    var ak=(total>=75?(isDrawDay?'h1':'h0'):total>=55?(isDrawDay?'m1':'m0'):(isDrawDay?'l1':'l0'));
+    var mo=d.getMonth()+1,dy=d.getDate();
+    var dowNames=['日','一','二','三','四','五','六'];
+    results.push({date:d,dateStr:mo+'月'+dy+'日（星期'+dowNames[dow]+'）',ganzhi:dStem+dBranch,tianshi:tianshi,renhe:renhe,total:total,isDrawDay:isDrawDay,advice:advices[ak]});
+  }
+  results.sort(function(a,b){return b.total-a.total;});
+  return results;
+}
+
+function showMoodCheck(){
+  var questions=[
+    {q:'今天睡眠如何？',opts:['😴 很差','😐 普通','😊 不錯','🌟 極好'],scores:[20,50,75,95]},
+    {q:'今天心情如何？',opts:['😢 很差','😕 一般','😊 開心','🥳 超棒'],scores:[15,45,75,95]},
+    {q:'今天有否遇到好事？',opts:['❌ 沒有','🤷 普通','👍 有','🎉 很多'],scores:[20,50,75,95]},
+    {q:'直覺感覺今天運氣如何？',opts:['💀 很差','😑 一般','✨ 不錯','🍀 超好'],scores:[10,40,75,99]}
+  ];
+  var qIdx=0,scores=[];
+  function renderQ(){
+    var q=questions[qIdx];
+    var body='<div style="text-align:center;padding:4px">';
+    body+='<div style="font-size:11px;color:var(--dim);margin-bottom:8px">問題 '+(qIdx+1)+' / '+questions.length+'</div>';
+    body+='<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:16px">'+q.q+'</div>';
+    q.opts.forEach(function(opt,i){
+      body+='<button onclick="window._moodAns('+i+')" style="display:block;width:100%;margin-bottom:8px;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:13px;cursor:pointer;text-align:left">'+opt+'</button>';
+    });
+    body+='</div>';
+    document.getElementById('mood-body').innerHTML=body;
+  }
+  window._moodAns=function(i){
+    scores.push(questions[qIdx].scores[i]);
+    qIdx++;
+    if(qIdx<questions.length){renderQ();}
+    else{
+      var avg=Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length);
+      localStorage.setItem('ms_mood',avg);
+      document.getElementById('mood-modal').style.display='none';
+      showToast('🎯 心情分數：'+avg+'/100 · 吉日推算已更新！','ok',4000);
+      render();
+    }
+  };
+  var modal=document.getElementById('mood-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='mood-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML='<div style="background:var(--card);border-radius:20px;padding:20px;max-width:360px;width:100%"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:15px;font-weight:900;color:var(--accent)">🎯 心情小測驗</div><button onclick="document.getElementById(\'mood-modal\').style.display=\'none\'" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--sub)">✕</button></div><div id="mood-body"></div></div>';
+    document.body.appendChild(modal);
+  }
+  modal.style.display='flex';
+  qIdx=0;scores=[];
+  renderQ();
 }
 
 function setCustomPrizeThr(){var v=parseInt((document.getElementById('prize-input').value||'').replace(/,/g,''));if(!isNaN(v)&&v>0){prizeThr=v;prizeShown=false;render();}}
