@@ -3,6 +3,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -577,6 +578,27 @@ function startCountdown(){
   },1000);
 }
 
+function addToCalendar(){
+  var nd=calcNextDraw();if(!nd){showToast('未能取得攪珠時間','err');return;}
+  var dt=new Date(nd.date+'T13:30:00Z');
+  var at=new Date(dt.getTime()-alarmMins*60000);
+  var et=new Date(dt.getTime()+3600000);
+  function fmt(d){return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';}
+  var ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTART:'+fmt(at)+'\r\nDTEND:'+fmt(et)+'\r\nSUMMARY:🎱 六合彩 '+nd.drawNum+'\r\nDESCRIPTION:攪珠晚上9:30\r\nBEGIN:VALARM\r\nTRIGGER:-PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:攪珠提醒\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  var b=new Blob([ics],{type:'text/calendar'});var u=URL.createObjectURL(b);
+  var a=document.createElement('a');a.href=u;a.download='lottery.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  showToast('📅 日曆已下載！打開後點「加入日曆」','ok',5000);
+}
+function setPhoneAlarm(){
+  var nd=calcNextDraw();if(!nd){showToast('未能取得攪珠時間','err');return;}
+  var dt=new Date(nd.date+'T13:30:00Z');
+  var at=new Date(dt.getTime()-alarmMins*60000);
+  var h=at.getHours().toString().padStart(2,'0');var m=at.getMinutes().toString().padStart(2,'0');
+  var L={30:'30分',60:'1小時',120:'2小時',360:'6小時',720:'12小時',1440:'24小時'};
+  showToast('請設鬧鐘：'+h+':'+m+' （攪珠前'+(L[alarmMins]||alarmMins+'分')+'）','ok',7000);
+  if(/Android/.test(navigator.userAgent))setTimeout(function(){window.location.href='intent://alarm#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR='+at.getHours()+';i.android.intent.extra.alarm.MINUTES='+at.getMinutes()+';end';},500);
+}
 function triggerAlarm(type){
   const msg=type==='prize'?`🎰 頭獎已達 ${fmtPrize(curPrize)}！`:`⏰ 攪珠還有 ${alarmMins} 分鐘！`;
   showToast(msg,'ok',5000);
@@ -589,62 +611,35 @@ let refreshLog = [];
 var _refreshXhr=null;
 function closeModal(){document.querySelectorAll('[data-modal]').forEach(function(e){e.remove();});}
 function doRefresh(){
-  refreshLog=['🔄 連接中...'];
-  render();
-  if(_refreshXhr){_refreshXhr.abort();_refreshXhr=null;}
-  var xhr=new XMLHttpRequest();
-  _refreshXhr=xhr;
-  xhr.open('GET', WORKER_URL, true);
-  xhr.timeout=20000;
-  xhr.onreadystatechange=function(){
-    if(xhr.readyState!==4) return;
-    if(xhr.status===0){
-      refreshLog=['❌ 網絡錯誤（status 0）- CORS被阻擋？'];
-      showToast('❌ 網絡錯誤 status 0','err',8000);
-      render(); return;
-    }
-    if(xhr.status!==200){
-      refreshLog=['❌ HTTP '+xhr.status];
-      render(); return;
-    }
-    try{
-      var data=JSON.parse(xhr.responseText);
-      if(!data.ok) throw new Error(data.error||'Worker錯誤');
+  if(_refreshXhr)return;
+  refreshLog=['🔄 連接中...'];render();
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},20000);
+  _refreshXhr=ctrl;
+  fetch(WORKER_URL,{signal:ctrl.signal,cache:'no-store'})
+    .then(function(r){
+      clearTimeout(tid);_refreshXhr=null;
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    })
+    .then(function(data){
+      if(!data.ok)throw new Error(data.error||'Worker錯誤');
       var rows=(data.results||[]).filter(function(r){
         return r.draw&&r.date&&r.numbers&&r.numbers.length===6&&r.extra!==undefined;
       });
-      if(rows.length>0){
-        var seen={};
-        var merged=rows.concat(hist).filter(function(h){
-          if(seen[h.draw]) return false;
-          seen[h.draw]=true; return true;
-        }).sort(function(a,b){return b.draw>a.draw?1:-1;});
-        hist=merged;
-        refreshLog=['✅ 更新成功！共 '+rows.length+' 期','📊 最新：'+merged[0].draw+' ('+merged[0].date+')','🎱 '+merged[0].numbers.join(', ')+'  特：'+merged[0].extra];
-        showToast('✅ 更新 '+rows.length+' 期！','ok',5000);
-        showConfetti();
-      } else {
-        refreshLog=['⚠️ 0筆有效數據，原始：'+xhr.responseText.slice(0,100)];
-        showToast('⚠️ 數據有誤','err');
-      }
-    }catch(e){
-      refreshLog=['❌ 解析錯誤: '+e.message,'原始回應: '+xhr.responseText.slice(0,120)];
-      showToast('❌ '+e.message,'err',8000);
-    }
-    render();
-  };
-  xhr.ontimeout=function(){refreshLog=['❌ 超時20秒'];render();};
-  xhr.onerror=function(){refreshLog=['❌ XHR onerror - 網絡錯誤'];render();};
-  xhr.send();
-  // Safety timeout in case onreadystatechange never fires
-  setTimeout(function(){
-    if(refreshLog[0]==='🔄 連接中...'){
-      refreshLog=['❌ 30秒無回應，請重試'];
+      if(!rows.length)throw new Error('無有效數據');
+      hist=rows;
+      refreshLog=['✅ 更新成功！共 '+rows.length+' 期',
+        '最新：'+rows[0].draw+' ('+rows[0].date+')',
+        '🎱 '+rows[0].numbers.join(', ')+' 特：'+rows[0].extra];
       render();
-    }
-  },30000);
+    })
+    .catch(function(e){
+      clearTimeout(tid);_refreshXhr=null;
+      refreshLog=[e.name==='AbortError'?'❌ 連接逾時':'❌ 更新失敗: '+e.message];
+      render();
+    });
 }
-
 
 function parseHK(text){
   var rows=[];
@@ -1090,10 +1085,15 @@ function renderAlarm(){
   out+='<div style="font-size:10px;color:var(--sub);margin-bottom:4px">'+nd.drawNum+' · '+nd.date+' 晚上 9:30</div>';
   out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:34px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div>';
   out+='<div class="chips" style="margin-bottom:14px">';
-  var amins=[10,15,30,60];
-  for(var i=0;i<amins.length;i++) out+='<button class="pill '+(alarmMins===amins[i]?'active':'')+'" onclick="alarmMins='+amins[i]+';render()">'+amins[i]+'分鐘前</button>';
+  var amins=[30,60,120,360,720,1440];
+  var aminL=['30分','1小時','2小時','6小時','12小時','24小時'];
+  for(var i=0;i<amins.length;i++) out+='<button class="pill '+(alarmMins===amins[i]?'active':'')+'" onclick="alarmMins='+amins[i]+';render()">'+aminL[i]+'前</button>';
   out+='</div>';
-  out+='<button class="btn '+(alarmOn?'btn-danger':'btn-primary')+' btn-full" onclick="alarmOn=!alarmOn;alarmFired=false;render()">'+(alarmOn?'🔔 已開啟（'+alarmMins+'分鐘前）— 點此關閉':'🔔 開啟提醒')+'</button></div>';
+  out+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  out+='<button class="btn btn-primary" style="flex:1" onclick="addToCalendar()">📅 加入日曆</button>';
+  out+='<button class="btn btn-ghost" style="flex:1" onclick="setPhoneAlarm()">⏰ 設鬧鐘</button>';
+  out+='</div>';
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center">💡 加入日曆最可靠，iOS Android 都支援</div></div>';
   out+='<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:10px">💰 頭獎金額提醒</div>';
   out+='<div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="prize-input" placeholder="自訂門檻金額" style="flex:1;margin-bottom:0"/><button class="btn btn-ghost" onclick="setCustomPrizeThr()">設定</button></div>';
   out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">';
