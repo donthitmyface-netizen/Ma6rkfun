@@ -1281,238 +1281,232 @@ function renderHeatmap(){
 // ═══ ALARM ═══
 
 function renderFortune(){
-  var out = '';
-  if(!userProfile || !userProfile.date){
-    out += '<div class="card" style="text-align:center;padding:30px">';
-    out += '<div style="font-size:48px;margin-bottom:12px">🔮</div>';
-    out += '<div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:8px">輸入生日開啟運程</div>';
-    out += '<div style="font-size:12px;color:var(--sub);margin-bottom:16px">基於紫微斗數真實排盤 · 農曆精確轉換 · 韓國四柱命理</div>';
-    out += '<button class="btn btn-primary" onclick="editProfile()">✨ 輸入生日資料</button></div>';
+  var out='';
+  if(!userProfile||!userProfile.date){
+    out+='<div class="card" style="text-align:center;padding:30px">';
+    out+='<div style="font-size:48px;margin-bottom:12px">🔮</div>';
+    out+='<div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:8px">輸入生日開啟運程</div>';
+    out+='<div style="font-size:12px;color:var(--sub);margin-bottom:16px">完整紫微斗數命盤 · 十二宮位 · 四化星 · 大限流年 · 韓國四柱</div>';
+    out+='<button class="btn btn-primary" onclick="editProfile()">✨ 輸入生日資料</button></div>';
     return out;
   }
-
-  var bdate = new Date(userProfile.date);
-  var by = bdate.getFullYear(), bm = bdate.getMonth()+1, bd = bdate.getDate();
-  var birthHour = userProfile.time ? parseInt(userProfile.time.split(':')[0]) : 12;
-  // iztro timeIndex: 0=子(23-1), 1=丑(1-3), 2=寅(3-5)... each 2hrs
-  // Hour 0-1=子(0), 1-3=丑(1), 3-5=寅(2), 5-7=卯(3), 7-9=辰(4), 9-11=巳(5)
-  // 11-13=午(6), 13-15=未(7), 15-17=申(8), 17-19=酉(9), 19-21=戌(10), 21-23=亥(11)
-  var tIdx = birthHour < 1 ? 0 : Math.floor((birthHour + 1) / 2) % 12;
-  var gender = (userProfile.gender === 'female') ? '女' : '男';
-  var dateStr = by + '-' + bm + '-' + bd;
-
-  var today = new Date();
-  var stems = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
-  var branches = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-  var elements = ['木','木','火','火','土','土','金','金','水','水'];
-  var elemEmoji = {木:'🌳',火:'🔥',土:'🌍',金:'⚙️',水:'💧'};
-  var daysSince = Math.floor((today - new Date('1900-01-31')) / 86400000);
-  var todayStemIdx = ((daysSince % 10) + 10) % 10;
-  var todayBranchIdx = ((daysSince % 12) + 12) % 12;
-  var todayStem = stems[todayStemIdx];
-  var todayBranch = branches[todayBranchIdx];
-  var todayElem = elements[todayStemIdx];
-  var zodiac = getZodiac(by, bm, bd);
-  var star = getStar(bm, bd);
-
-  // Try iztro for real ZWDS chart
-  var iztroData = null;
-  try {
-    if(typeof iztro !== 'undefined' && iztro.astro) {
-      iztroData = iztro.astro.bySolar(dateStr, tIdx, gender, true, 'zh-TW');
-    }
-  } catch(e) { console.log('iztro err:', e); }
-
-  // Extract key data from iztro if available
-  var mingGongStar = '未知';
-  var shenGong = '未知';
-  var wuxingJu = '未知';
-  var lifeStage = '未知';
-  var iztroZodiac = zodiac; // fallback to our calculation
-  
-  if(iztroData) {
-    try {
-      // zodiac from iztro
-      if(iztroData.zodiac) iztroZodiac = iztroData.zodiac;
-      // wuxing element group (五行局)
-      if(iztroData.fiveElementsClass) wuxingJu = iztroData.fiveElementsClass;
-      // soul palace (命宮) main star
-      var palaces = iztroData.palaces || [];
-      for(var i=0; i<palaces.length; i++){
-        var p = palaces[i];
-        if(p.name === '命宮' || p.name === '命宫'){
-          if(p.majorStars && p.majorStars.length > 0)
-            mingGongStar = p.majorStars.map(function(s){return s.name||s;}).join('、');
-          break;
-        }
-      }
-      // body palace (身宮)
-      if(iztroData.bodyPalace) shenGong = iztroData.bodyPalace.name || '未知';
-    } catch(e) {}
-  }
-
-  var birthElemIdx = (by - 1900 + 200) % 10;
-  var birthElem = elements[birthElemIdx];
-
   function isGen(a,b){var g={木:'火',火:'土',土:'金',金:'水',水:'木'};return g[a]===b;}
-  function isCtl(a,b){var c={木:'土',土:'水',水:'火',火:'金',金:'木'};return c[a]===b;}
+  function isCon(a,b){var c={木:'土',土:'水',水:'火',火:'金',金:'木'};return c[a]===b;}
+  var f=getDailyFortune(userProfile);
+  if(!f)return '<div class="card" style="text-align:center;padding:20px">⏳ 命盤計算中...</div>';
+  var bdate=new Date(userProfile.date);
+  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
+  var today=new Date();
+  var scoreColor=f.score>=80?'#2e7d32':f.score>=60?'#f57f17':'#c62828';
 
-  var rel = isGen(birthElem,todayElem)?'相生 ✅':isCtl(birthElem,todayElem)?'相剋 ⚠️':
-            isGen(todayElem,birthElem)?'被生 🌟':isCtl(todayElem,birthElem)?'被剋 ❌':'比和 ☯️';
-  var relScore = isGen(birthElem,todayElem)?88:isCtl(birthElem,todayElem)?45:
-                 isGen(todayElem,birthElem)?82:isCtl(todayElem,birthElem)?38:70;
-
-  // Zodiac compatibility with today's branch
-  var zodiacBranch={'鼠':'子','牛':'丑','虎':'寅','兔':'卯','龍':'辰','蛇':'巳',
-                    '馬':'午','羊':'未','猴':'申','雞':'酉','狗':'戌','豬':'亥'};
-  var myBI = branches.indexOf(zodiacBranch[iztroZodiac]||'');
-  var diff = myBI >= 0 ? Math.abs(myBI - todayBranchIdx) : 6;
-  if(diff > 6) diff = 12 - diff;
-  var branchBonus = diff === 0 ? 15 : diff === 4 ? 10 : diff === 6 ? -15 : 0;
-  var score = Math.min(99, Math.max(30, relScore + branchBonus));
-
-  var scoreColor = score>=80?'#2e7d32':score>=60?'#f57f17':'#c62828';
-  var fortunes = [
-    {min:85,emoji:'🌟',title:'大吉之日',msg:'五行相生，諸事順遂。財運、事業皆有突破機會，宜主動出擊。'},
-    {min:70,emoji:'✨',title:'吉日',msg:'運勢平穩向上，宜積極行動，把握良機，貴人相助。'},
-    {min:55,emoji:'☁️',title:'平穩之日',msg:'運勢中平，宜謹慎行事，注意細節，避免衝動決策。'},
-    {min:0,emoji:'🌙',title:'需謹慎',msg:'五行稍有相剋，宜靜不宜動，守成待機，勿輕舉妄動。'}
+  // ══ 1. 今日運勢總覽 ══
+  out+='<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:4px">'+today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · '+f.stem+f.branch+'日</div>';
+  out+='<div style="font-size:36px;margin-bottom:4px">'+f.emoji+'</div>';
+  out+='<div style="font-size:22px;font-weight:900;color:var(--accent);margin-bottom:4px">'+f.title+'</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:14px">'+f.subtitle+'</div>';
+  out+='<div style="background:var(--row);border-radius:20px;height:12px;margin-bottom:6px;overflow:hidden"><div style="height:100%;width:'+f.score+'%;background:linear-gradient(90deg,'+scoreColor+','+scoreColor+'99);border-radius:20px"></div></div>';
+  out+='<div style="font-size:13px;font-weight:800;color:'+scoreColor+'">今日綜合運勢 '+f.score+'/100</div>';
+  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">';
+  var subScores=[
+    {k:'財運',e:'💰',s:Math.min(99,Math.max(30,f.score+Math.round(Math.sin((by*bm+today.getDate())*0.7)*12)))},
+    {k:'感情',e:'💕',s:Math.min(99,Math.max(30,f.score+Math.round(Math.cos((bm*bd+today.getMonth())*0.9)*10)))},
+    {k:'事業',e:'💼',s:Math.min(99,Math.max(30,f.score+Math.round(Math.sin((by+bd)*0.5)*8)))},
+    {k:'健康',e:'💪',s:Math.min(99,Math.max(30,f.score+Math.round(Math.cos(bd*0.6)*6)))}
   ];
-  var fmsg = fortunes.find(function(f){return score>=f.min;}) || fortunes[fortunes.length-1];
+  subScores.forEach(function(ss){
+    var c2=ss.s>=75?'#2e7d32':ss.s>=55?'#f57f17':'#c62828';
+    out+='<div style="background:var(--row);border-radius:10px;padding:8px"><div style="font-size:14px">'+ss.e+'</div><div style="font-size:10px;color:var(--sub);margin:2px 0">'+ss.k+'</div><div style="font-size:13px;font-weight:900;color:'+c2+'">'+ss.s+'</div></div>';
+  });
+  out+='</div></div>';
 
-  // ── Header Card ──
-  out += '<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
-  out += '<div style="font-size:11px;color:var(--sub);margin-bottom:4px">';
-  out += today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · '+todayStem+todayBranch+'日</div>';
-  out += '<div style="font-size:32px;margin-bottom:4px">'+fmsg.emoji+'</div>';
-  out += '<div style="font-size:20px;font-weight:900;color:var(--accent);margin-bottom:4px">'+fmsg.title+'</div>';
-  out += '<div style="font-size:11px;color:var(--sub);margin-bottom:12px">';
-  out += iztroZodiac+'年 · '+star+'座 · '+birthElem+'命 · 今日'+todayElem+'運</div>';
-  out += '<div style="background:var(--row);border-radius:20px;height:10px;margin-bottom:4px;overflow:hidden">';
-  out += '<div style="height:100%;width:'+score+'%;background:linear-gradient(90deg,'+scoreColor+','+scoreColor+'88);border-radius:20px"></div></div>';
-  out += '<div style="font-size:11px;font-weight:700;color:'+scoreColor+'">今日運勢 '+score+'/100</div></div>';
+  // ══ 2. 紫微斗數命盤 ══
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">🌟 紫微斗數命盤</div>';
+  out+='<div style="font-size:10px;color:var(--dim)">依《紫微斗數全書》十四主星排盤</div></div>';
+  out+='<div style="text-align:right"><div style="font-size:11px;font-weight:700;color:var(--accent)">'+(f.fiveClass||'')+'</div><div style="font-size:10px;color:var(--sub)">五行局</div></div></div>';
+  out+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">';
+  [{label:'命宮主星',val:f.soulStar||'無正曜',h:true},{label:'身宮主星',val:f.bodyStar||'--'},{label:'生肖',val:f.zodiac}].forEach(function(ki){
+    out+='<div style="background:'+(ki.h?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:10px;text-align:center;'+(ki.h?'border:1.5px solid var(--accent)':'')+'">';
+    out+='<div style="font-size:9px;color:var(--sub);margin-bottom:3px">'+ki.label+'</div>';
+    out+='<div style="font-size:15px;font-weight:900;color:'+(ki.h?'var(--accent)':'var(--text)')+'">'+ki.val+'</div></div>';
+  });
+  out+='</div>';
 
-  // ── Ziwei Chart Card ──
-  out += '<div class="card" style="margin-bottom:10px">';
-  out += '<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">⭐ 紫微斗數命盤</div>';
-  if(iztroData) {
-    out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
-    var items = [
-      ['🌟 命宮主星', mingGongStar],
-      ['🏛️ 身宮', shenGong !== '未知' ? shenGong : '計算中'],
-      ['🌀 五行局', wuxingJu !== '未知' ? wuxingJu : '計算中'],
-      ['🐾 生肖', iztroZodiac]
-    ];
-    items.forEach(function(item){
-      out += '<div style="background:var(--accent-bg);border-radius:10px;padding:10px">';
-      out += '<div style="font-size:10px;color:var(--sub)">'+item[0]+'</div>';
-      out += '<div style="font-size:14px;font-weight:800;color:var(--accent)">'+item[1]+'</div></div>';
+  // 12-palace grid
+  out+='<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px">📊 十二宮位</div>';
+  var palaceOrder=['命宮','父母宮','福德宮','田宅宮','官祿宮','交友宮','遷移宮','疾厄宮','財帛宮','子女宮','夫妻宮','兄弟宮'];
+  var palaceEmoji={'命宮':'👤','父母宮':'👨‍👩‍👦','福德宮':'🌸','田宅宮':'🏠','官祿宮':'💼','交友宮':'🤝','遷移宮':'✈️','疾厄宮':'💊','財帛宮':'💰','子女宮':'👶','夫妻宮':'💍','兄弟宮':'👫'};
+  var palaceDesc={'命宮':'個性格局','父母宮':'家庭背景','福德宮':'內心世界','田宅宮':'不動產','官祿宮':'事業','交友宮':'人際','遷移宮':'出外','疾厄宮':'健康','財帛宮':'財運','子女宮':'子嗣','夫妻宮':'感情','兄弟宮':'手足'};
+  var palaces=f.ab?f.ab.palaces||[]:[];
+  var palaceMap={};
+  palaces.forEach(function(p){palaceMap[p.name]=p;});
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
+  palaceOrder.forEach(function(pname){
+    var p=palaceMap[pname]||null;
+    var isLife=pname==='命宮';
+    var majorStars=p?(p.majorStars||[]).map(function(s){return s.name+(s.mutagen?'·'+s.mutagen:'');}).join(' '):'';
+    var minorStars=p?(p.minorStars||[]).slice(0,2).map(function(s){return s.name;}).join(' '):'';
+    out+='<div style="background:'+(isLife?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:8px;border:'+(isLife?'2px solid var(--accent)':'none')+'">';
+    out+='<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
+    out+='<span style="font-size:10px;font-weight:700;color:'+(isLife?'var(--accent)':'var(--sub)')+'">'+palaceEmoji[pname]+' '+pname+'</span>';
+    out+='<span style="font-size:9px;color:var(--dim)">'+palaceDesc[pname]+'</span></div>';
+    out+='<div style="font-size:12px;font-weight:700;color:'+(isLife?'var(--accent)':'var(--text)')+'">'+( majorStars||'空宮')+'</div>';
+    if(minorStars)out+='<div style="font-size:9px;color:var(--dim)">'+minorStars+'</div>';
+    out+='</div>';
+  });
+  out+='</div>';
+
+  // 四化星
+  try{
+    var muts=f.ab&&(f.ab.transformations||f.ab.mutagens)||[];
+    if(muts&&muts.length){
+      out+='<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">⚡ 四化星</div>';
+      out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+      var tn={化祿:'💚祿',化權:'💙權',化科:'💛科',化忌:'❤️忌'};
+      muts.forEach(function(t){out+='<div style="background:var(--row);border-radius:8px;padding:5px 10px;font-size:11px">'+(tn[t.type]||t.type)+' '+t.star+'→'+(t.palace||'')+'</div>';});
+      out+='</div>';
+    }
+  }catch(e){}
+
+  // 大限
+  try{
+    var decs=f.ab&&(f.ab.decadal||f.ab.decades)||[];
+    var age=today.getFullYear()-by;
+    var curDec=decs.find?decs.find(function(d){return d.range&&age>=d.range[0]&&age<=d.range[1];}):null;
+    if(curDec){
+      out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px;margin-bottom:10px">';
+      out+='<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px">🔄 大限（'+curDec.range[0]+'~'+curDec.range[1]+'歲）</div>';
+      out+='<div style="font-size:13px;font-weight:700;color:var(--text)">'+(curDec.palaceName||'')+'</div>';
+      if(curDec.majorStars)out+='<div style="font-size:11px;color:var(--sub)">'+curDec.majorStars.map(function(s){return s.name;}).join(' ')+'</div>';
+      out+='</div>';
+    }
+  }catch(e){}
+
+  // 流運
+  if(f.horoscope){
+    out+='<div style="background:rgba(252,228,236,0.5);border-radius:10px;padding:10px;margin-bottom:8px">';
+    out+='<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:6px">📅 今日流運宮位</div>';
+    out+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    [{l:'流年',d:f.horoscope.yearly},{l:'流月',d:f.horoscope.monthly},{l:'流日',d:f.horoscope.daily}].forEach(function(fi){
+      if(fi.d&&fi.d.palaceName)out+='<div style="background:white;border-radius:8px;padding:5px 10px;font-size:11px"><span style="color:var(--dim)">'+fi.l+'</span> <span style="font-weight:700;color:var(--accent)">'+fi.d.palaceName+'</span></div>';
     });
-    out += '</div>';
-    // Today fortune message
-    out += '<div style="font-size:12px;color:var(--text);line-height:1.8;padding:10px;background:var(--row);border-radius:10px">';
-    out += fmsg.msg + '（'+iztroZodiac+'年生 · 命宮'+mingGongStar+'）';
-    out += '</div>';
-  } else {
-    out += '<div style="font-size:12px;color:var(--sub);padding:10px;text-align:center">';
-    out += '⌛ 正在載入紫微斗數庫...<br/><small>如持續失敗請檢查網絡</small></div>';
-    out += '<div style="font-size:12px;color:var(--text);line-height:1.8;margin-top:8px">'+fmsg.msg+'</div>';
+    out+='</div></div>';
   }
-  out += '</div>';
 
-  // ── Four Pillars (四柱) ──
-  out += '<div class="card" style="margin-bottom:10px">';
-  out += '<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">🏛️ 四柱八字</div>';
-  var yearStemIdx = (by - 1900 + 200) % 10;
-  var yearBranchIdx = (by - 1900 + 200) % 12;
-  var monStemIdx = ((bm-1)*2 + yearStemIdx) % 10;
-  var monBranchIdx = (bm - 1 + yearBranchIdx) % 12;
-  var birthDaysSince = Math.floor((bdate - new Date('1900-01-31')) / 86400000);
-  var dayStemIdx = ((birthDaysSince % 10) + 10) % 10;
-  var dayBranchIdx = ((birthDaysSince % 12) + 12) % 12;
-  var hrStemIdx = userProfile.time ? (dayStemIdx * 2 + tIdx) % 10 : null;
-  var cols = [
-    {label:'年柱',top:stems[yearStemIdx],bot:branches[yearBranchIdx],elem:elements[yearStemIdx]},
-    {label:'月柱',top:stems[monStemIdx],bot:branches[monBranchIdx],elem:elements[monStemIdx]},
-    {label:'日柱',top:stems[dayStemIdx],bot:branches[dayBranchIdx],elem:elements[dayStemIdx]},
-    {label:'時柱',top:hrStemIdx!==null?stems[hrStemIdx]:'?',bot:branches[tIdx],elem:hrStemIdx!==null?elements[hrStemIdx]:'?'}
-  ];
-  out += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">';
-  cols.forEach(function(c){
-    out += '<div style="background:var(--accent-bg);border-radius:8px;padding:8px;text-align:center">';
-    out += '<div style="font-size:9px;color:var(--sub)">'+c.label+'</div>';
-    out += '<div style="font-size:20px;font-weight:900;color:var(--accent)">'+c.top+'</div>';
-    out += '<div style="font-size:16px;font-weight:700;color:var(--text)">'+c.bot+'</div>';
-    out += '<div style="font-size:9px;color:var(--dim)">'+c.elem+'</div></div>';
-  });
-  out += '</div>';
-  out += '</div>';
-
-  // ── Five Elements ──
-  out += '<div class="card" style="margin-bottom:10px">';
-  out += '<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">☯️ 五行分析</div>';
-  out += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:10px">';
-  out += '<div style="text-align:center"><div style="font-size:28px">'+elemEmoji[birthElem]+'</div>';
-  out += '<div style="font-size:11px;font-weight:700;color:var(--accent)">命元'+birthElem+'</div></div>';
-  out += '<div style="font-size:14px;font-weight:700;color:var(--sub)">'+rel+'</div>';
-  out += '<div style="text-align:center"><div style="font-size:28px">'+elemEmoji[todayElem]+'</div>';
-  out += '<div style="font-size:11px;color:var(--sub)">今日'+todayElem+'</div></div></div>';
-  var relText = isGen(birthElem,todayElem)?'今日五行相生，命元得助，貴人運旺，諸事易成。':
-                isCtl(birthElem,todayElem)?'今日五行相剋，命元受壓，需謹慎行事，避免衝動。':
-                isGen(todayElem,birthElem)?'今日五行滋生命元，能量充沛，宜積極進取把握機遇。':
-                isCtl(todayElem,birthElem)?'今日命元受剋，保持低調，靜待時機，守成待機。':
-                '今日五行比和，運勢平穩，按計劃穩步行事最佳。';
-  out += '<div style="font-size:11px;color:var(--sub);text-align:center;line-height:1.7">'+relText+'</div>';
-  out += '</div>';
-
-  // ── Korean Saju ──
-  out += '<div class="card" style="margin-bottom:10px">';
-  out += '<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:6px">🇰🇷 韓國四柱（사주팔자）</div>';
-  out += '<div style="font-size:10px;color:var(--dim);margin-bottom:10px">韓國命理著重家庭運、財運、事業及健康四維分析</div>';
-  var seed = by + bm*100 + bd + today.getDate() + (today.getMonth()+1)*7;
-  function sajuScore(offset){ return Math.min(99,Math.max(30,score+Math.round(Math.sin(seed*(offset+1))*18))); }
-  var sajuAspects = [
-    {emoji:'💰',label:'財運',score:sajuScore(1),tip:'財星入宮'},
-    {emoji:'❤️',label:'感情',score:sajuScore(2),tip:'桃花運勢'},
-    {emoji:'💼',label:'事業',score:sajuScore(3),tip:'官星能量'},
-    {emoji:'🏠',label:'家庭',score:sajuScore(4),tip:'韓國四柱重視'},
-    {emoji:'🌿',label:'健康',score:sajuScore(5),tip:'身體元氣'},
-    {emoji:'🧠',label:'學習',score:sajuScore(6),tip:'文昌星位'}
-  ];
-  out += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
-  sajuAspects.forEach(function(a){
-    var c = a.score>=75?'#2e7d32':a.score>=55?'#f57f17':'#c62828';
-    out += '<div style="background:var(--row);border-radius:10px;padding:9px">';
-    out += '<div style="font-size:16px">'+a.emoji+'</div>';
-    out += '<div style="display:flex;justify-content:space-between;margin:4px 0">';
-    out += '<span style="font-size:11px;font-weight:700">'+a.label+'</span>';
-    out += '<span style="font-size:11px;font-weight:900;color:'+c+'">'+a.score+'</span></div>';
-    out += '<div style="background:var(--border);border-radius:10px;height:5px;overflow:hidden">';
-    out += '<div style="width:'+a.score+'%;height:100%;background:'+c+'"></div></div>';
-    out += '<div style="font-size:9px;color:var(--dim);margin-top:3px">'+a.tip+'</div></div>';
-  });
-  out += '</div></div>';
-
-  // ── Lucky Numbers ──
-  var luckyNums = [];
-  var lseed = (by + bm*bd + today.getFullYear()*daysSince) % 1000;
-  for(var li=0; li<4; li++){
-    var ln = ((lseed*(li+3)+by+today.getDate())%49)+1;
-    if(!luckyNums.includes(ln)) luckyNums.push(ln);
+  // 命宮主星解讀
+  var SR={'紫微':{c:'帝王星',t:'天生領袖，氣宇軒昂',w:'財運厚重，宜從政商',td:'今日貴人運強，宜主動出擊',warn:'避免過度自我'},
+    '天機':{c:'智謀星',t:'聰慧機敏，善謀策',w:'宜智識型工作',td:'思維敏銳，宜策劃新計畫',warn:'付諸行動勿空想'},
+    '太陽':{c:'光明星',t:'光明磊落，慷慨大方',w:'正財旺盛',td:'人際運旺，宜公開場合',warn:'注意休息'},
+    '武曲':{c:'財星',t:'剛毅果斷，理財強',w:'正財偏財兼旺',td:'宜處理財務投資',warn:'勿過於剛硬'},
+    '天同':{c:'福星',t:'溫和善良，福緣深厚',w:'食祿豐厚',td:'福德充盈，萬事順遂',warn:'勿過於懶散'},
+    '廉貞':{c:'才藝星',t:'才華橫溢，個性鮮明',w:'宜技藝專業',td:'創意靈感豐富',warn:'避免情緒化'},
+    '天府':{c:'庫府星',t:'穩重厚實，富貴雙全',w:'田宅財運俱佳',td:'宜穩健行事，財庫充盈',warn:'勿因保守錯失'},
+    '太陰':{c:'田宅星',t:'心思細膩，文藝氣質',w:'田宅運旺',td:'桃花運動，感情佳音',warn:'勿過於敏感'},
+    '貪狼':{c:'桃花星',t:'多才多藝，魅力四射',w:'偏財運強',td:'桃花偏財並旺，宜社交',warn:'避免過度享樂'},
+    '巨門':{c:'是非星',t:'口才卓絕，思維深邃',w:'宜口才職業',td:'宜謹言慎行，以和為貴',warn:'勿惹口舌是非'},
+    '天相':{c:'印綬星',t:'正直厚道，貴人相助',w:'宜輔佐工作',td:'貴人相助，事業有進展',warn:'勿依賴他人'},
+    '天梁':{c:'蔭星',t:'清高孤傲，悲天憫人',w:'宜公益醫療法律',td:'長輩貴人相助',warn:'避免孤高自賞'},
+    '七殺':{c:'將星',t:'魄力超群，開拓性強',w:'宜武職軍警創業',td:'宜積極衝刺，勿畏縮',warn:'避免衝動莽撞'},
+    '破軍':{c:'開拓星',t:'衝勁十足，善於突破',w:'宜開創新事業',td:'破舊立新，宜出行拓展',warn:'勿破壞既有關係'}};
+  var sr=f.soulStar&&SR[f.soulStar];
+  if(sr){
+    out+='<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">';
+    out+='<div style="background:var(--accent);color:white;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:8px">'+f.soulStar+' · '+sr.c+'</div>';
+    out+='<div style="font-size:11px;color:var(--sub);line-height:2">';
+    out+='🎭 <b>性格：</b>'+sr.t+'<br/>💰 <b>財富：</b>'+sr.w+'<br/>';
+    out+='<span style="color:var(--accent)">✨ <b>今日：</b></span>'+sr.td+'<br/>';
+    out+='<span style="color:#c62828">⚠️ <b>注意：</b></span>'+sr.warn;
+    out+='</div></div>';
   }
-  out += '<div class="card" style="margin-bottom:10px">';
-  out += '<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:8px">🍀 今日幸運號碼</div>';
-  out += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">';
-  luckyNums.forEach(function(n){ out += ball(n, 36); });
-  out += '</div>';
-  out += '<div style="font-size:10px;color:var(--dim)">根據命宮主星、八字天干地支推算</div></div>';
+  out+='</div>';
 
-  out += '<div style="text-align:center;margin-bottom:10px">';
-  out += '<button onclick="editProfile()" style="font-size:11px;color:var(--dim);background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer">✏️ 修改生日資料</button></div>';
-  out += '<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center"><span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
+  // ══ 3. 四柱八字 ══
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:2px">🏛️ 四柱八字</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">《三命通會》天干地支 · 格局推算</div>';
+  var birthHour=userProfile.time?parseInt(userProfile.time.split(':')[0]):-1;
+  var hourBranch=birthHour>=0?f.branches[Math.floor(((birthHour+1)%24)/2)]:'?';
+  var ySI=(by-1900+200)%10, yBI=(by-1900+200)%12;
+  var mSI=((bm-1)*2+ySI)%10, mBI=(bm+yBI-1)%12;
+  var dSI=((f.daysSince%10)+10)%10;
+  var hSI=birthHour>=0?((Math.floor(((birthHour+1)%24)/2)*2+Math.floor(ySI/2))%10):-1;
+  var dmDesc={甲:'甲木·棟樑之才',乙:'乙木·柔韌之材',丙:'丙火·太陽之火',丁:'丁火·燭光之火',
+    戊:'戊土·大地厚土',己:'己土·田園之土',庚:'庚金·斧刃之金',辛:'辛金·珠玉之金',壬:'壬水·大海之水',癸:'癸水·雨露之水'};
+  var cols4=[
+    {lb:'年柱',s:f.stems[ySI],b:f.branches[yBI],e:f.elements[ySI],sub:f.zodiac},
+    {lb:'月柱',s:f.stems[mSI],b:f.branches[mBI],e:f.elements[mSI],sub:bm+'月'},
+    {lb:'日柱',s:f.stems[dSI],b:f.branches[((f.daysSince%12)+12)%12],e:f.elements[dSI],sub:'今日',hi:true},
+    {lb:'時柱',s:hSI>=0?f.stems[hSI]:'?',b:hourBranch,e:hSI>=0?f.elements[hSI]:'?',sub:birthHour>=0?birthHour+'時':'未知'}
+  ];
+  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">';
+  cols4.forEach(function(c){
+    out+='<div style="background:'+(c.hi?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:10px;text-align:center;'+(c.hi?'border:1.5px solid var(--accent)':'')+'">';
+    out+='<div style="font-size:9px;color:var(--sub);margin-bottom:2px">'+c.lb+'</div>';
+    out+='<div style="font-size:20px;font-weight:900;color:'+(c.hi?'var(--accent)':'var(--text)')+'">'+c.s+'</div>';
+    out+='<div style="font-size:16px;font-weight:700;color:var(--text)">'+c.b+'</div>';
+    out+='<div style="font-size:9px;color:var(--dim)">'+c.e+'</div>';
+    out+='<div style="font-size:8px;color:var(--dim)">'+c.sub+'</div></div>';
+  });
+  out+='</div>';
+  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px">';
+  out+='<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:3px">⚡ 今日日主：'+f.stems[dSI]+'（'+f.elements[dSI]+'）</div>';
+  out+='<div style="font-size:11px;color:var(--sub)">'+(dmDesc[f.stems[dSI]]||f.stems[dSI]+'日主')+'</div>';
+  out+='</div></div>';
+
+  // ══ 4. 五行分析 ══
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:2px">☯️ 五行分析</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">《滴天髓》五行生剋制化</div>';
+  var elemEmoji={木:'🌳',火:'🔥',土:'🌍',金:'⚙️',水:'💧'};
+  var rel=isGen(f.birthElement,f.todayElement)?'相生 ✅':isCon(f.birthElement,f.todayElement)?'相剋 ⚠️':isGen(f.todayElement,f.birthElement)?'被生 🌟':isCon(f.todayElement,f.birthElement)?'被剋 ❌':'比和 ☯️';
+  var relText=isGen(f.birthElement,f.todayElement)?'命元生今日：才能施展，財祿自來，宜積極行動':
+    isCon(f.birthElement,f.todayElement)?'命元剋今日：耗費精神，宜守成待機':
+    isGen(f.todayElement,f.birthElement)?'今日生命元：天降貴人，事業順遂':
+    isCon(f.todayElement,f.birthElement)?'今日剋命元：阻力較多，宜低調應對':'比和之日：五行平衡，穩步前行';
+  out+='<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:12px">';
+  out+='<div style="text-align:center"><div style="font-size:32px">'+elemEmoji[f.birthElement]+'</div><div style="font-size:12px;font-weight:700;color:var(--accent)">'+f.birthElement+'命</div></div>';
+  out+='<div style="text-align:center"><div style="font-size:20px;font-weight:900;color:var(--sub)">'+rel+'</div><div style="font-size:9px;color:var(--dim)">命元對今日</div></div>';
+  out+='<div style="text-align:center"><div style="font-size:32px">'+elemEmoji[f.todayElement]+'</div><div style="font-size:12px;font-weight:700;color:var(--sub)">'+f.todayElement+'（今日）</div></div></div>';
+  out+='<div style="background:var(--row);border-radius:10px;padding:10px;font-size:11px;color:var(--sub);line-height:1.9">'+relText+'</div></div>';
+
+  // ══ 5. 韓國四柱 ══
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:2px">🇰🇷 韓國四柱 사주팔자</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">韓國命理傳統 · 六運程分析</div>';
+  var sB=Math.min(95,Math.max(35,Math.round((f.score+65)/2)));
+  var sajuA=[
+    {l:'財運 재물운',e:'💰',s:Math.min(98,Math.max(30,sB+Math.round(Math.sin((by+today.getMonth()+1)*0.9)*15))),d:'偏財正財兼論'},
+    {l:'感情 애정운',e:'💕',s:Math.min(98,Math.max(30,sB+Math.round(Math.cos((bm+today.getDate())*1.1)*12))),d:'桃花緣份婚姻'},
+    {l:'健康 건강운',e:'💪',s:Math.min(98,Math.max(30,sB+Math.round(Math.sin(bd*0.7)*8))),d:'氣血狀況疾厄'},
+    {l:'事業 직업운',e:'💼',s:Math.min(98,Math.max(30,sB+Math.round(Math.cos((by+bm)*0.5)*10))),d:'官祿事業宮'},
+    {l:'家庭 가정운',e:'🏠',s:Math.min(98,Math.max(30,sB+Math.round(Math.sin((by*bd)*0.003)*9))),d:'田宅家庭和諧'},
+    {l:'貴人 귀인운',e:'🤝',s:Math.min(98,Math.max(30,sB+Math.round(Math.cos((bm*by)*0.001)*11))),d:'交友貴人助力'}
+  ];
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  sajuA.forEach(function(a){
+    var c=a.s>=75?'#2e7d32':a.s>=55?'#f57f17':'#c62828';
+    out+='<div style="background:var(--row);border-radius:10px;padding:10px">';
+    out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    out+='<span style="font-size:11px">'+a.e+' <b>'+a.l+'</b></span><span style="font-size:14px;font-weight:900;color:'+c+'">'+a.s+'</span></div>';
+    out+='<div style="background:var(--border);border-radius:10px;height:6px;overflow:hidden;margin-bottom:4px"><div style="width:'+a.s+'%;height:100%;background:'+c+';border-radius:10px"></div></div>';
+    out+='<div style="font-size:9px;color:var(--dim)">'+a.d+'</div></div>';
+  });
+  out+='</div></div>';
+
+  // ══ 6. 幸運號碼 ══
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:4px">🍀 今日幸運號碼</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:10px">命元五行（'+f.birthElement+'）× 今日天干（'+f.stem+'）× 命宮主星推算</div>';
+  out+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+  f.luckyNums.forEach(function(n){out+=ball(n,40);});
+  out+='</div></div>';
+
+  out+='<div style="text-align:center;margin-bottom:16px"><button onclick="editProfile()" style="font-size:11px;color:var(--dim);background:none;border:1px solid var(--border);border-radius:20px;padding:7px 16px;cursor:pointer">✏️ 修改生日資料</button></div>';
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center"><span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
   return out;
 }
-
 
 function renderAlarm(){
   var PRESETS=[{l:'$800萬（每次都提醒）',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
