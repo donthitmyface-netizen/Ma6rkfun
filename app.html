@@ -610,101 +610,129 @@ function getDailyFortune(profile){
   var birthStr=by+'-'+pad(bm)+'-'+pad(bd);
   var todayStr=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
 
-  // ── iztro core data ──
-  var ab=null, horoscope=null, zodiac=null, soulStar='', bodyStar='', fiveClass='', soulPalace='';
-  var chineseDateStr='';
+  // ── iztro: birth chart ──
+  var ab=null, horoscope=null;
+  var birthYearPillar='', birthMonthPillar='', birthDayPillar='', birthHourPillar='';
+  var zodiac='', soulStar='', bodyStar='', fiveClass='', soulPalace='';
+  var birthChineseDate='';
+
+  // ── iztro: TODAY's pillars (separate call for today) ──
+  var todayYearPillar='', todayMonthPillar='', todayDayPillar='';
+
   try{
     if(typeof iztro!=='undefined'&&iztro.astro){
       var birthHour=profile.time?parseInt(profile.time.split(':')[0]):12;
+      // iztro time index: 子=0(23-1), 丑=1(1-3), 寅=2(3-5)...
       var tIdx=Math.floor(((birthHour+1)%24)/2);
-      ab=iztro.astro.bySolar(birthStr,tIdx,gender,true,'zh-TW');
+
+      // Birth chart
+      ab=iztro.astro.bySolar(birthStr, tIdx, gender, true, 'zh-TW');
       if(ab){
-        zodiac=ab.zodiac||null;
+        zodiac=ab.zodiac||'';
         soulStar=ab.soul||'';
         bodyStar=ab.body||'';
         fiveClass=ab.fiveElementsClass||'';
-        chineseDateStr=ab.chineseDate||'';
         soulPalace=ab.earthlyBranchOfSoulPalace||'';
+        birthChineseDate=ab.chineseDate||''; // e.g. "乙丑 己卯 辛丑 壬午" (year month day hour of birth)
         horoscope=ab.horoscope(today);
+
+        // Parse birth pillars from chineseDate "年柱 月柱 日柱 時柱"
+        var bPillars=birthChineseDate.split(' ');
+        birthYearPillar=bPillars[0]||'';
+        birthMonthPillar=bPillars[1]||'';
+        birthDayPillar=bPillars[2]||'';  // This is birth DAY pillar
+        birthHourPillar=bPillars[3]||'';
+      }
+
+      // Today's pillars - get from today's astrolabe
+      var todayAb=iztro.astro.bySolar(todayStr, 0, '男', true, 'zh-TW');
+      if(todayAb&&todayAb.chineseDate){
+        var tPillars=todayAb.chineseDate.split(' ');
+        todayYearPillar=tPillars[0]||'';
+        todayMonthPillar=tPillars[1]||'';
+        todayDayPillar=tPillars[2]||''; // TODAY's actual day pillar e.g. "辛巳"
       }
     }
-  }catch(e){console.log('iztro:',e);}
+  }catch(e){console.log('iztro err:',e);}
 
-  // Fallback zodiac if iztro failed
-  if(!zodiac){
-    var zmap={'鸡':'雞','龙':'龍','猪':'豬'};
-    var z=_getZodiacFallback(by,bm,bd);
-    zodiac=zmap[z]||z;
-  }
+  // Fallback zodiac
+  if(!zodiac) zodiac=_getZodiacFallback(by,bm,bd);
+  var zmap={'鸡':'雞','龙':'龍','猪':'豬'};
+  zodiac=zmap[zodiac]||zodiac;
 
-  // ── 天干地支 for TODAY ──
+  // ── Extract stem/branch from today's day pillar ──
   var stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
   var branches=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
   var elements=['木','木','火','火','土','土','金','金','水','水'];
-  var daysSince=Math.floor((today-new Date('1900-01-31'))/86400000);
-  var stem=stems[((daysSince%10)+10)%10];
-  var branch=branches[((daysSince%12)+12)%12];
 
-  // ── Birth year elements (命元五行) ──
-  var birthElement=elements[(by-1900+200)%10];
-  var todayElement=elements[((daysSince%10)+10)%10];
+  var todayStem='', todayBranch='', todayElement='';
+  if(todayDayPillar&&todayDayPillar.length>=2){
+    todayStem=todayDayPillar[0];
+    todayBranch=todayDayPillar[1];
+    var si=stems.indexOf(todayStem);
+    todayElement=si>=0?elements[si]:'';
+  } else {
+    // Fallback calculation for today's stem/branch
+    var daysSince=Math.floor((today-new Date('1900-01-31'))/86400000);
+    todayStem=stems[((daysSince%10)+10)%10];
+    todayBranch=branches[((daysSince%12)+12)%12];
+    todayElement=elements[((daysSince%10)+10)%10];
+  }
 
-  // ── 《三命通會》五行生剋 score ──
-  var elementScore={
-    木:{木:65,火:85,土:50,金:40,水:90},
-    火:{木:85,火:65,土:80,金:45,水:35},
-    土:{木:45,火:80,土:65,金:85,水:45},
-    金:{木:40,火:45,土:80,金:65,水:85},
-    水:{木:90,火:35,土:45,金:80,水:65}
-  };
-  var baseScore=(elementScore[birthElement]&&elementScore[birthElement][todayElement])||65;
+  // ── Birth year element (命元) from year pillar ──
+  var birthElement='';
+  if(birthYearPillar&&birthYearPillar.length>=1){
+    var byStemIdx=stems.indexOf(birthYearPillar[0]);
+    birthElement=byStemIdx>=0?elements[byStemIdx]:'';
+  }
+  if(!birthElement){
+    var daysSince2=Math.floor((today-new Date('1900-01-31'))/86400000);
+    birthElement=elements[(by-1900+200)%10];
+  }
 
-  // 《滴天髓》地支六合/沖 adjustment
-  var zodiacBranch={'鼠':'子','牛':'丑','虎':'寅','兔':'卯','龍':'辰','蛇':'巳',
-                    '馬':'午','羊':'未','猴':'申','雞':'酉','狗':'戌','豬':'亥',
+  // ── Luck score: 《三命通會》五行生剋 + 《滴天髓》地支 ──
+  var elemScore={木:{木:65,火:85,土:50,金:40,水:90},火:{木:85,火:65,土:80,金:45,水:35},
+    土:{木:45,火:80,土:65,金:85,水:45},金:{木:40,火:45,土:80,金:65,水:85},水:{木:90,火:35,土:45,金:80,水:65}};
+  var base=(elemScore[birthElement]&&elemScore[birthElement][todayElement])||65;
+
+  // 地支六沖三合 adjustment
+  var zodiacBranch={'鼠':'子','牛':'丑','虎':'寅','兔':'卯','龍':'辰','蛇':'巳','馬':'午','羊':'未','猴':'申','雞':'酉','狗':'戌','豬':'亥',
                     '龙':'辰','鸡':'酉','猪':'亥'};
-  var myBranch=zodiacBranch[zodiac]||'';
-  var bi=branches.indexOf(myBranch), ti=branches.indexOf(branch);
+  var myBr=zodiacBranch[zodiac]||'';
+  var bi=branches.indexOf(myBr), ti=branches.indexOf(todayBranch);
   if(bi>=0&&ti>=0){
     var diff=(bi-ti+12)%12;
-    if(diff===0) baseScore+=15;           // 比肩同宮
-    else if(diff===1||diff===11) baseScore+=8;  // 六合
-    else if(diff===4||diff===8) baseScore+=10;  // 三合
-    else if(diff===6) baseScore-=18;      // 六沖
-    else if(diff===3||diff===9) baseScore-=8;   // 刑
+    if(diff===0)base+=15; else if(diff===1||diff===11)base+=8;
+    else if(diff===4||diff===8)base+=10; else if(diff===6)base-=18;
+    else if(diff===3||diff===9)base-=8;
   }
-
-  // iztro daily palace bonus
   if(horoscope&&horoscope.daily){
     var dp=horoscope.daily.palaceName||'';
-    if(dp==='福德'||dp==='財帛') baseScore+=8;
-    else if(dp==='疾厄'||dp==='官祿') baseScore-=5;
+    if(dp==='福德'||dp==='財帛')base+=8; else if(dp==='疾厄')base-=5;
   }
-
-  baseScore=Math.min(98,Math.max(28,baseScore));
+  base=Math.min(98,Math.max(28,base));
 
   // ── 《窮通寶鑑》命宮主星解讀 ──
   var starReadings={
-    '紫微':'紫微坐命，貴氣逼人，領導力強，宜從政從商，今日宜主動出擊。',
-    '天機':'天機坐命，聰慧機變，智謀過人，今日思維敏銳，宜策劃謀事。',
-    '太陽':'太陽坐命，光明磊落，貴人緣佳，今日人際運旺，宜廣結善緣。',
-    '武曲':'武曲坐命，果斷剛毅，財運旺盛，今日財帛宮受照，宜把握商機。',
-    '天同':'天同坐命，福厚祿豐，性情溫和，今日福德充盈，萬事順遂。',
-    '廉貞':'廉貞坐命，才華橫溢，個性鮮明，今日宜發揮創意，展現才能。',
-    '天府':'天府坐命，穩重富貴，福壽雙全，今日田宅宮吉，財運平穩。',
-    '太陰':'太陰坐命，心思細膩，文藝氣質，今日桃花運旺，感情有佳音。',
-    '貪狼':'貪狼坐命，多才多藝，慾望旺盛，今日偏財運強，宜把握機遇。',
-    '巨門':'巨門坐命，口才卓絕，是非較多，今日宜謹言慎行，以和為貴。',
-    '天相':'天相坐命，印綬官星，貴人相助，今日官祿宮吉，事業有進展。',
-    '天梁':'天梁坐命，清高孤傲，救人無數，今日福德宮明，貴人自來。',
-    '七殺':'七殺坐命，魄力超群，開創性強，今日殺伐之氣旺，宜積極進取。',
-    '破軍':'破軍坐命，衝勁十足，善於開拓，今日遷移宮動，宜出行拓展。'
+    '紫微':{td:'貴人運強，宜主動出擊，展現領導力',warn:'避免過度自我'},
+    '天機':{td:'思維敏銳，宜策劃新計畫',warn:'付諸行動勿空想'},
+    '太陽':{td:'人際運旺，宜廣結善緣',warn:'注意休息'},
+    '武曲':{td:'宜處理財務投資事宜',warn:'勿過於剛硬'},
+    '天同':{td:'福德充盈，萬事順遂',warn:'勿過於懶散'},
+    '廉貞':{td:'創意靈感豐富，宜展現才能',warn:'避免情緒化'},
+    '天府':{td:'財庫充盈，宜穩健行事',warn:'勿因保守錯失'},
+    '太陰':{td:'感情有佳音，宜文藝創作',warn:'勿過於敏感'},
+    '貪狼':{td:'桃花偏財並旺，宜社交',warn:'避免過度享樂'},
+    '巨門':{td:'宜謹言慎行，以和為貴',warn:'勿惹口舌'},
+    '天相':{td:'貴人相助，事業有進展',warn:'勿依賴他人'},
+    '天梁':{td:'長輩貴人相助',warn:'避免孤高自賞'},
+    '七殺':{td:'宜積極衝刺，勿畏縮',warn:'避免衝動莽撞'},
+    '破軍':{td:'破舊立新，宜出行拓展',warn:'勿破壞既有關係'}
   };
-  var starText=soulStar&&starReadings[soulStar]?starReadings[soulStar]:
-    (zodiac+'年生，'+birthElement+'命，今日'+stem+branch+'，五行相'+
-    (['木','火'].includes(todayElement)&&['木','火'].includes(birthElement)?'生，運勢旺盛':
-     (['金','水'].includes(todayElement)&&['金','水'].includes(birthElement)?'生，財運亨通':
-     '和，平穩發展'))+'。');
+  var sr=soulStar&&starReadings[soulStar];
+  var starText=sr?'（命宮'+soulStar+'）'+sr.td+'。注意：'+sr.warn:
+    zodiac+'年生，'+birthElement+'命，今日'+todayStem+todayBranch+'，'+
+    (birthElement===todayElement?'比和平穩':'五行相'+(['木','火'].includes(todayElement)?'生':'和')+'，運勢平穩');
 
   var fortunes=[
     {min:85,emoji:'🌟',title:'大吉之日'},
@@ -712,14 +740,13 @@ function getDailyFortune(profile){
     {min:55,emoji:'☁️',title:'平穩之日'},
     {min:0,emoji:'🌙',title:'需謹慎'}
   ];
-  var msg=fortunes.find(function(f){return baseScore>=f.min;})||fortunes[3];
+  var msg=fortunes.find(function(f){return base>=f.min;})||fortunes[3];
 
-  // ── 《滴天髓》幸運號碼 (based on day master + birth) ──
+  // Lucky numbers based on birth pillars + today
   var luckyNums=[];
   var seed=(by+bm*bd+today.getFullYear()*(today.getMonth()+1)+today.getDate());
-  // Day master element maps to number ranges
   var elemNums={木:[3,4,8,9,13,14],火:[1,2,6,7,11,12],土:[5,10,15,20,25,30],金:[16,17,21,22,26,27],水:[18,19,23,24,28,29]};
-  var pool=elemNums[birthElement]||[1,2,3,4,5,6];
+  var pool=elemNums[birthElement]||[1,2,3];
   for(var i=0;i<6;i++){
     var n=((seed*(i+3)*7+by+today.getDate()+pool[i%pool.length])%49)+1;
     if(!luckyNums.includes(n))luckyNums.push(n);
@@ -728,30 +755,28 @@ function getDailyFortune(profile){
 
   var star=getStar(bm,bd);
   return {
-    emoji:msg.emoji, title:msg.title, score:baseScore,
-    subtitle:zodiac+'｜'+star+'座｜'+birthElement+'命｜'+stem+branch+'日',
+    emoji:msg.emoji, title:msg.title, score:base,
+    subtitle:zodiac+'｜'+star+'座｜'+birthElement+'命｜今日'+todayStem+todayBranch,
     text:starText,
+    // Birth pillars (from iztro chineseDate)
+    birthYearPillar:birthYearPillar, birthMonthPillar:birthMonthPillar,
+    birthDayPillar:birthDayPillar, birthHourPillar:birthHourPillar,
+    birthChineseDate:birthChineseDate,
+    // Today's pillars (from iztro today)
+    todayYearPillar:todayYearPillar, todayMonthPillar:todayMonthPillar,
+    todayDayPillar:todayDayPillar,
+    todayStem:todayStem, todayBranch:todayBranch,
+    // Legacy fields for compatibility
+    stem:todayStem, branch:todayBranch,
     soulStar:soulStar, bodyStar:bodyStar, fiveClass:fiveClass,
-    chineseDateStr:chineseDateStr, soulPalace:soulPalace,
-    luckyNums:luckyNums, stem:stem, branch:branch,
-    birthElement:birthElement, todayElement:todayElement,
-    zodiac:zodiac, star:star, stems:stems, branches:branches,
-    elements:elements, daysSince:daysSince, horoscope:horoscope, ab:ab
+    chineseDateStr:birthChineseDate, soulPalace:soulPalace,
+    luckyNums:luckyNums, birthElement:birthElement, todayElement:todayElement,
+    zodiac:zodiac, star:star, stems:stems, branches:branches, elements:elements,
+    daysSince:Math.floor((today-new Date('1900-01-31'))/86400000),
+    horoscope:horoscope, ab:ab
   };
 }
 
-function addToCalendar(){
-  var nd=calcNextDraw();if(!nd){showToast('未能取得攪珠時間','err');return;}
-  var dt=new Date(nd.date+'T13:30:00Z');
-  var at=new Date(dt.getTime()-alarmMins*60000);
-  var et=new Date(dt.getTime()+3600000);
-  function fmt(d){return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';}
-  var ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTART:'+fmt(at)+'\r\nDTEND:'+fmt(et)+'\r\nSUMMARY:🎱 六合彩 '+nd.drawNum+'\r\nDESCRIPTION:攪珠晚上9:30\r\nBEGIN:VALARM\r\nTRIGGER:-PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:攪珠提醒\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR';
-  var b=new Blob([ics],{type:'text/calendar'});var u=URL.createObjectURL(b);
-  var a=document.createElement('a');a.href=u;a.download='lottery.ics';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
-  showToast('📅 日曆已下載！打開後點「加入日曆」','ok',5000);
-}
 function setPhoneAlarm(){
   var nd=calcNextDraw();if(!nd){showToast('未能取得攪珠時間','err');return;}
   var dt=new Date(nd.date+'T13:30:00Z');
@@ -1301,7 +1326,7 @@ function renderFortune(){
 
   // ══ 1. 今日運勢總覽 ══
   out+='<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
-  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:4px">'+today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · '+f.stem+f.branch+'日</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:4px">'+today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · '+(f.todayDayPillar||f.stem+f.branch)+'日</div>';
   out+='<div style="font-size:36px;margin-bottom:4px">'+f.emoji+'</div>';
   out+='<div style="font-size:22px;font-weight:900;color:var(--accent);margin-bottom:4px">'+f.title+'</div>';
   out+='<div style="font-size:11px;color:var(--sub);margin-bottom:14px">'+f.subtitle+'</div>';
@@ -1422,37 +1447,67 @@ function renderFortune(){
   }
   out+='</div>';
 
-  // ══ 3. 四柱八字 ══
+  // ══ 3. 四柱八字（直接來自 iztro）══
   out+='<div class="card" style="margin-bottom:10px">';
-  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:2px">🏛️ 四柱八字</div>';
-  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">《三命通會》天干地支 · 格局推算</div>';
-  var birthHour=userProfile.time?parseInt(userProfile.time.split(':')[0]):-1;
-  var hourBranch=birthHour>=0?f.branches[Math.floor(((birthHour+1)%24)/2)]:'?';
-  var ySI=(by-1900+200)%10, yBI=(by-1900+200)%12;
-  var mSI=((bm-1)*2+ySI)%10, mBI=(bm+yBI-1)%12;
-  var dSI=((f.daysSince%10)+10)%10;
-  var hSI=birthHour>=0?((Math.floor(((birthHour+1)%24)/2)*2+Math.floor(ySI/2))%10):-1;
-  var dmDesc={甲:'甲木·棟樑之才',乙:'乙木·柔韌之材',丙:'丙火·太陽之火',丁:'丁火·燭光之火',
-    戊:'戊土·大地厚土',己:'己土·田園之土',庚:'庚金·斧刃之金',辛:'辛金·珠玉之金',壬:'壬水·大海之水',癸:'癸水·雨露之水'};
-  var cols4=[
-    {lb:'年柱',s:f.stems[ySI],b:f.branches[yBI],e:f.elements[ySI],sub:f.zodiac},
-    {lb:'月柱',s:f.stems[mSI],b:f.branches[mBI],e:f.elements[mSI],sub:bm+'月'},
-    {lb:'日柱',s:f.stems[dSI],b:f.branches[((f.daysSince%12)+12)%12],e:f.elements[dSI],sub:'今日',hi:true},
-    {lb:'時柱',s:hSI>=0?f.stems[hSI]:'?',b:hourBranch,e:hSI>=0?f.elements[hSI]:'?',sub:birthHour>=0?birthHour+'時':'未知'}
+  out+='<div style="font-size:13px;font-weight:900;color:var(--accent);margin-bottom:2px">🏛️ 出生四柱八字</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">《三命通會》· iztro 精準排盤 · 節氣正確</div>';
+
+  var dmDesc={甲:'甲木·棟樑之才，剛直不阿',乙:'乙木·柔韌之材，適應力強',丙:'丙火·太陽之火，光明熱情',丁:'丁火·燭光之火，溫柔細膩',
+    戊:'戊土·大地厚土，穩重可靠',己:'己土·田園之土，溫和務實',庚:'庚金·斧刃之金，果斷剛毅',辛:'辛金·珠玉之金，精緻聰慧',壬:'壬水·大海之水，智慧廣博',癸:'癸水·雨露之水，滋潤細心'};
+  var elemDesc={木:'木命',火:'火命',土:'土命',金:'金命',水:'水命'};
+
+  // Parse each pillar: e.g. "乙丑" -> stem=乙, branch=丑, element=木
+  function parsePillar(p){
+    if(!p||p.length<2)return{s:'?',b:'?',e:'?'};
+    var s=p[0],b=p[1];
+    var stems2=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+    var elem2=['木','木','火','火','土','土','金','金','水','水'];
+    var si=stems2.indexOf(s);
+    return{s:s,b:b,e:si>=0?elem2[si]:'?'};
+  }
+
+  var yp=parsePillar(f.birthYearPillar);
+  var mp=parsePillar(f.birthMonthPillar);
+  var dp=parsePillar(f.birthDayPillar);
+  var hp=parsePillar(f.birthHourPillar);
+  var isHourKnown=userProfile.time&&userProfile.time.length>0;
+  var bCols=[
+    {lb:'年柱',s:yp.s,b:yp.b,e:yp.e,sub:f.zodiac},
+    {lb:'月柱',s:mp.s,b:mp.b,e:mp.e,sub:bm+'月'},
+    {lb:'日柱',s:dp.s,b:dp.b,e:dp.e,sub:'出生日'},
+    {lb:'時柱',s:isHourKnown?hp.s:'?',b:isHourKnown?hp.b:'?',e:isHourKnown?hp.e:'?',sub:isHourKnown?(userProfile.time+'時'):'未知時辰'}
   ];
   out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">';
-  cols4.forEach(function(c){
-    out+='<div style="background:'+(c.hi?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:10px;text-align:center;'+(c.hi?'border:1.5px solid var(--accent)':'')+'">';
+  bCols.forEach(function(c){
+    out+='<div style="background:var(--row);border-radius:10px;padding:10px;text-align:center">';
     out+='<div style="font-size:9px;color:var(--sub);margin-bottom:2px">'+c.lb+'</div>';
-    out+='<div style="font-size:20px;font-weight:900;color:'+(c.hi?'var(--accent)':'var(--text)')+'">'+c.s+'</div>';
+    out+='<div style="font-size:20px;font-weight:900;color:var(--accent)">'+c.s+'</div>';
     out+='<div style="font-size:16px;font-weight:700;color:var(--text)">'+c.b+'</div>';
     out+='<div style="font-size:9px;color:var(--dim)">'+c.e+'</div>';
     out+='<div style="font-size:8px;color:var(--dim)">'+c.sub+'</div></div>';
   });
   out+='</div>';
-  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px">';
-  out+='<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:3px">⚡ 今日日主：'+f.stems[dSI]+'（'+f.elements[dSI]+'）</div>';
-  out+='<div style="font-size:11px;color:var(--sub)">'+(dmDesc[f.stems[dSI]]||f.stems[dSI]+'日主')+'</div>';
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:10px">'+( f.birthChineseDate?'八字：'+f.birthChineseDate:'')+'</div>';
+
+  // Day master = birth day pillar stem
+  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px;margin-bottom:10px">';
+  out+='<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:3px">⚡ 日主（命主天干）：'+dp.s+'（'+dp.e+'）</div>';
+  out+='<div style="font-size:11px;color:var(--sub)">'+(dmDesc[dp.s]||dp.s+'日主')+'</div></div>';
+
+  // Today's pillars separately
+  out+='<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">';
+  out+='<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px">📅 今日干支（'+today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日）</div>';
+  var tp2=parsePillar(f.todayDayPillar);
+  out+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+  [{lb:'今年',p:parsePillar(f.todayYearPillar)},{lb:'今月',p:parsePillar(f.todayMonthPillar)},{lb:'今日',p:tp2,hi:true}].forEach(function(c){
+    out+='<div style="background:'+(c.hi?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:8px;text-align:center;'+(c.hi?'border:1.5px solid var(--accent)':'')+'">';
+    out+='<div style="font-size:9px;color:var(--sub)">'+c.lb+'</div>';
+    out+='<div style="font-size:18px;font-weight:900;color:'+(c.hi?'var(--accent)':'var(--text)')+'">'+c.p.s+'</div>';
+    out+='<div style="font-size:14px;font-weight:700;color:var(--text)">'+c.p.b+'</div>';
+    out+='<div style="font-size:9px;color:var(--dim)">'+c.p.e+'</div></div>';
+  });
+  out+='</div>';
+  if(!isHourKnown)out+='<div style="font-size:10px;color:var(--dim);margin-top:8px;text-align:center">💡 輸入出生時間可顯示時柱，令排盤更精準</div>';
   out+='</div></div>';
 
   // ══ 4. 五行分析 ══
