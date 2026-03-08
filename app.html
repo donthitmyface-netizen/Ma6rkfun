@@ -808,6 +808,9 @@ function saveProfile(){
   var d=document.getElementById('ob-date').value;
   var t=document.getElementById('ob-time').value||'';
   if(!d){showToast('請輸入出生日期','err');return;}
+  var dObj=new Date(d);
+  if(isNaN(dObj.getTime())){showToast('日期格式有誤，請重新輸入','err');return;}
+  if(dObj.getFullYear()<1924||dObj.getFullYear()>2010){showToast('請輸入 1924–2010 年間的出生日期','err');return;}
   var profile={date:d,time:t,gender:_obGender||'unknown',saved:Date.now()};
   localStorage.setItem('ms_profile',JSON.stringify(profile));
   userProfile=profile;
@@ -1564,54 +1567,88 @@ function renderFortune(){
 }
 
 function renderAlarm(){
-  var PRESETS=[{l:'$800萬（每次都提醒）',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
+  var PRESETS=[{l:'$800萬（每次必提醒）',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
   var nd=calcNextDraw();
   var out='';
 
-  // Prize threshold card
+  // ── 頭獎提醒說明 ──
   out+='<div class="card accent-top">';
-  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:4px">🔔 頭獎金額提醒</div>';
-  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:14px">設定頭獎門檻，達到後自動加入日曆提醒你！</div>';
-  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">';
+  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:4px">🔔 頭獎金額鬧鐘</div>';
+  out+='<div style="font-size:11px;color:var(--sub);line-height:1.8;margin-bottom:14px">';
+  out+='設定門檻後按「一鍵設定提醒」，app 會為未來 <b>10 期攪珠</b>自動下載日曆提醒（.ics），加入日曆後手機會在攪珠前 <b>1 小時</b>彈出通知。';
+  out+='<br/>💡 iOS：下載後打開 .ics → 加入日曆<br/>💡 Android：直接加入 Google 日曆</div>';
+
+  // 門檻選擇
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px">';
   for(var i=0;i<PRESETS.length;i++){
-    var p=PRESETS[i];
-    var active=prizeThr===p.v;
+    var p=PRESETS[i],active=prizeThr===p.v;
     out+='<button onclick="prizeThr='+p.v+';prizeShown=false;render()" style="padding:10px 8px;border-radius:10px;border:1.5px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent-bg)':'var(--card)')+';color:'+(active?'var(--accent)':'var(--sub)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:left">'+(active?'✓ ':'')+p.l+'</button>';
   }
   out+='</div>';
-  out+='<div style="display:flex;gap:8px;margin-bottom:10px">';
-  out+='<input type="text" id="prize-input" placeholder="自訂金額（如：50000000）" style="flex:1;margin-bottom:0"/>';
+  out+='<div style="display:flex;gap:8px;margin-bottom:14px">';
+  out+='<input type="text" id="prize-input" placeholder="自訂金額（如：60000000）" style="flex:1;margin-bottom:0"/>';
   out+='<button class="btn btn-ghost" onclick="setCustomPrizeThr()">設定</button>';
   out+='</div>';
-  
-  // Current prize status
-  var latestPrize=hist&&hist[0]?hist[0].prize||0:0;
-  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px;margin-bottom:12px;text-align:center">';
-  out+='<div style="font-size:10px;color:var(--sub)">下期 '+nd.drawNum+' · '+nd.date+'</div>';
-  out+='<div style="font-size:18px;font-weight:900;color:var(--accent)">$8百萬起</div>';
-  out+='</div>';
-  
-  // One-click calendar reminder button
-  out+='<button class="btn btn-primary btn-full" style="margin-bottom:8px" onclick="addPrizeReminder()">';
-  out+=(prizeOn?'✅ 已設提醒 · 再按重新下載日曆':'📅 一鍵設定提醒（加入日曆）');
-  out+='</button>';
-  out+='<div style="font-size:10px;color:var(--dim);text-align:center">下載後打開 .ics 檔案 → 系統自動加入日曆 → 攪珠前會彈出提示</div>';
+
+  // 下期狀態
+  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">';
+  out+='<div style="font-size:10px;color:var(--sub);margin-bottom:4px">下期攪珠 · '+nd.drawNum+' · '+nd.date+' 晚上 9:30</div>';
+  out+='<div style="font-size:22px;font-weight:900;color:var(--accent)">頭獎 $8百萬起</div>';
+  out+='<div style="font-size:10px;color:var(--dim);margin-top:4px">門檻設定：≥ '+fmtPrize(prizeThr)+'　'+(prizeOn?'<span style="color:#2e7d32;font-weight:700">✅ 提醒已啟用</span>':'<span style="color:var(--dim)">提醒未啟用</span>')+'</div>';
   out+='</div>';
 
-  // How it works card
+  // 一鍵提醒按鈕
+  out+='<button class="btn btn-primary btn-full" style="margin-bottom:6px;font-size:14px;padding:14px" onclick="addPrizeReminder()">';
+  out+=prizeOn?'📅 提醒已設定 · 點擊重新下載':'📅 一鍵設定鬧鐘提醒（下載日曆）';
+  out+='</button>';
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:4px">加入日曆後，每次攪珠前 1 小時手機自動彈出提示</div>';
+  out+='</div>';
+
+  // ── 吉日推算卡（需要生日）──
+  if(userProfile&&userProfile.date){
+    var lucky7=calcLucky7Days();
+    out+='<div class="card" style="margin-bottom:10px">';
+    out+='<div style="font-size:14px;font-weight:900;color:var(--accent);margin-bottom:4px">🗓️ 未來7天最佳購彩吉日</div>';
+    out+='<div style="font-size:10px;color:var(--dim);margin-bottom:12px">天時（干支相合）+ 人和（心情）自動推算，Top 3 吉日</div>';
+    if(lucky7&&lucky7.length>0){
+      var medals=['🥇','🥈','🥉'];
+      lucky7.slice(0,3).forEach(function(d,i){
+        var scoreColor=d.total>=80?'#2e7d32':d.total>=60?'#f57f17':'#c62828';
+        out+='<div style="background:var(--row);border-radius:12px;padding:12px;margin-bottom:8px">';
+        out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+        out+='<div style="font-size:14px;font-weight:900">'+medals[i]+' '+d.dateStr+' <span style="font-size:11px;color:var(--sub)">'+d.ganzhi+'</span></div>';
+        out+='<div style="font-size:18px;font-weight:900;color:'+scoreColor+'">'+d.total+'分</div></div>';
+        out+='<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">';
+        out+='<span style="background:rgba(255,105,144,0.15);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px">☀️ 天時 '+d.tianshi+'</span>';
+        out+='<span style="background:rgba(0,150,136,0.1);color:#00796b;border-radius:6px;padding:2px 8px;font-size:10px">❤️ 人和 '+d.renhe+'</span>';
+        out+='<span style="background:rgba(255,152,0,0.1);color:#e65100;border-radius:6px;padding:2px 8px;font-size:10px">'+d.isFriday+'</span>';
+        out+='</div>';
+        out+='<div style="font-size:11px;color:var(--sub)">'+d.advice+'</div>';
+        out+='</div>';
+      });
+      out+='<button class="btn btn-ghost btn-full" onclick="showMoodCheck()" style="margin-top:4px">🎯 做心情測驗更新人和分數</button>';
+    } else {
+      out+='<div style="text-align:center;padding:16px;color:var(--dim)">計算中...</div>';
+    }
+    out+='</div>';
+  } else {
+    out+='<div class="card" style="text-align:center;padding:20px;margin-bottom:10px">';
+    out+='<div style="font-size:11px;color:var(--sub)">💡 輸入生日後可查看未來7天最佳購彩吉日</div>';
+    out+='<button class="btn btn-ghost" style="margin-top:10px" onclick="editProfile()">✨ 輸入生日</button></div>';
+  }
+
+  // ── 如何運作 ──
   out+='<div class="card">';
   out+='<div style="font-size:13px;font-weight:800;margin-bottom:10px">💡 如何運作</div>';
   out+='<div style="font-size:11px;color:var(--sub);line-height:2">';
-  out+='📅 按「一鍵設定提醒」→ 下載日曆檔案<br/>';
-  out+='📲 打開下載的檔案 → 點「加入日曆」<br/>';
-  out+='🔔 攪珠當天 → 手機自動彈出提醒<br/>';
-  out+='🎱 逢星期二、四、六 · 晚上 9:30 攪珠';
+  out+='1️⃣ 選擇頭獎門檻（預設 $800萬）<br/>';
+  out+='2️⃣ 按「一鍵設定鬧鐘提醒」下載 .ics 檔案<br/>';
+  out+='3️⃣ 打開下載檔案 → 點「加入日曆」<br/>';
+  out+='4️⃣ 攪珠前 1 小時，手機自動彈出提示<br/>';
+  out+='🎱 攪珠時間：逢星期二、四、六 晚上 9:30';
   out+='</div></div>';
 
-  // Ad slot
-  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
-  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
-  out+='</div>';
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center"><span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
   return out;
 }
 
