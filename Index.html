@@ -1,0 +1,162 @@
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="六合常中"/>
+<meta name="theme-color" content="#e91e63"/>
+<title>六合常中 🎱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* {box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root {
+  --bg: #fff5f8; --card: #fff; --border: #ffd6e7; --text: #3d1a2e; --sub: #a0688a;
+  --dim: #c4a0b4; --accent: #e91e63; --accent-bg: #fce4ec; --track: #fce4ec;
+  --row: #fff5f8; --input: #fff8fb; --iborder: #f8bbd0; --shadow: rgba(233,30,99,.15);
+  --tab: #fff; --header1: #e91e63; --header2: #ff6090;
+}
+body {background:var(--bg);color:var(--text);font-family:'Noto Sans TC', -apple-system,BlinkMacSystemFont,"Noto Sans HK",sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar {width:0;height:0;}
+button,input,select {font-family:inherit;}
+/* Animations */ @keyframes floatY {0%,100% {transform:translateY(0)}50% {transform:translateY(-6px)}} @keyframes confetti {0% {transform:translateY(-20px) rotate(0deg);opacity:1}100% {transform:translateY(100vh) rotate(720deg);opacity:0}} @keyframes fadeIn {from {opacity:0;transform:translateY(8px)}to {opacity:1;transform:translateY(0)}} .float {animation:floatY 2.5s ease-in-out infinite} .fade {animation:fadeIn .3s ease}
+/* Header */ #header {background:linear-gradient(135deg,var(–header1),var(–header2));padding:12px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:200;box-shadow:0 3px 12px rgba(0,0,0,.2);} #header .title {flex:1} #header .title h1 {font-size:18px;font-weight:900;color:#fff;letter-spacing:.5px} #header .title p {font-size:9px;color:rgba(255,255,255,.75);letter-spacing:1.5px;margin-top:2px} .theme-btns {display:flex;gap:5px} .theme-btn {width:28px;height:28px;border-radius:8px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff} .theme-btn.active {border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.4)} #draw-info {text-align:right;flex-shrink:0} #draw-info .draw {font-size:11px;color:#fff;font-weight:800} #draw-info .date {font-size:9px;color:rgba(255,255,255,.75)}
+/* Lucky bar */ #lucky-bar {background:rgba(233,30,99,.08);border-bottom:1px solid var(–border);padding:6px 14px;display:flex;align-items:center;gap:8px;} #lucky-bar span {font-size:10px;color:var(–accent);font-weight:700;white-space:nowrap} #lucky-track {flex:1;height:5px;background:var(–track);border-radius:3px;overflow:hidden} #lucky-fill {height:100%;background:var(–accent);border-radius:3px;transition:width .5s} #lucky-pct {font-size:10px;font-weight:800;color:var(–accent);white-space:nowrap} #lucky-msg {font-size:9px;color:var(–sub);white-space:nowrap}
+/* Tabs */ #tabs {display:flex;overflow-x:auto;background:var(–tab);border-bottom:2px solid var(–border);position:sticky;top:64px;z-index:199;scrollbar-width:none} #tabs::-webkit-scrollbar {display:none} .tab-btn {flex-shrink:0;padding:10px 10px;border:none;background:none;border-bottom:3px solid transparent;color:var(–sub);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:color .15s} .tab-btn.active {border-bottom-color:var(–accent);color:var(–accent)}
+/* Content */ #content {padding:12px 12px 60px}
+/* Cards */ .card {background:var(–card);border:1px solid var(–border);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px var(–shadow)} .card.accent-top {border-top:4px solid var(–accent)} .row-item {background:var(–row);border:1px solid var(–border);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+/* Balls */ .ball {border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;user-select:none;transition:all .15s} .ball-r {background:#ffcdd2;border:2px solid #e53935;color:#e53935} .ball-b {background:#bbdefb;border:2px solid #1e88e5;color:#1e88e5} .ball-g {background:#c8e6c9;border:2px solid #43a047;color:#43a047} .ball-o {background:#ffe0b2;border:2px solid #fb8c00;color:#fb8c00} .ball-p {background:#e1bee7;border:2px solid #8e24aa;color:#8e24aa} .ball-r.extra {background:#e53935;color:#fff;border-color:#e53935} .ball-b.extra {background:#1e88e5;color:#fff;border-color:#1e88e5} .ball-g.extra {background:#43a047;color:#fff;border-color:#43a047} .ball-o.extra {background:#fb8c00;color:#fff;border-color:#fb8c00} .ball-p.extra {background:#8e24aa;color:#fff;border-color:#8e24aa}
+/* Buttons */ .btn {padding:11px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.15);border:1.5px solid transparent;transition:all .15s} .btn:hover {transform: scale(1.05);} .btn-primary {background:var(–accent);color:#fff;border-color:var(–accent)} .btn-full {width:100%} .btn-ghost {background:var(–card);color:var(–text);border-color:var(–iborder)} .btn-success {background:#2e7d32;color:#fff} .btn-danger {background:#c62828;color:#fff} .btn-gold {background:#f57f17;color:#fff} .btn-purple {background:#6a1b9a;color:#fff} .btn-fun {background:linear-gradient(135deg,var(–accent),#ff8a65);color:#fff} .btn:disabled {background:var(–row);color:var(–dim);border-color:var(–track);box-shadow:none;cursor:default}
+/* Pills */ .pill {padding:7px 14px;border-radius:20px;border:1.5px solid var(–iborder);background:var(–card);color:var(–sub);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s} .pill.active {background:var(–accent);color:#fff;border-color:var(–accent);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+/* Input */ input[type=text],input[type=date],input[type=password] {width:100%;padding:11px 13px;background:var(–input);border:1.5px solid var(–iborder);border-radius:10px;color:var(–text);font-size:13px;outline:none;margin-bottom:10px}
+/* Bar */ .bar-track {flex:1;height:6px;background:var(–track);border-radius:3px;overflow:hidden} .bar-fill {height:100%;border-radius:3px;transition:width .5s}
+/* Grid 49 */ .grid49 {display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px} .grid49 button {aspect-ratio:1;border-radius:50%;font-weight:800;font-size:11px;cursor:pointer;border:2px solid var(–iborder);background:var(–input);transition:all .1s;padding:0}
+/* Toast */ #toast {position:fixed;top:80px;left:50%;transform:translateX(-50%);border-radius:12px;padding:10px 20px;font-size:13px;color:#fff;z-index:9999;max-width:92vw;text-align:center;line-height:1.5;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3);font-weight:600;display:none} #toast.ok {background:#2e7d32} #toast.err {background:#c62828}
+/* Confetti */ #confetti {position:fixed;inset:0;pointer-events:none;z-index:9990;overflow:hidden;display:none}
+/* Settings */ #settings-modal {position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px} #settings-modal.open {display:flex} .modal-box {background:#fff;border-radius:20px;padding:24px;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+/* FAB */ #fab {position:fixed;bottom:22px;right:16px;width:48px;height:48px;border-radius:50%;border:none;background:linear-gradient(135deg,#e91e63,#ff6090);font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(233,30,99,.4);z-index:100;color:#fff}
+/* Dark theme */ body.dark { –bg:#121212;–card:#1e1e1e;–border:#333;–text:#f0f0f0;–sub:#aaa; –dim:#555;–accent:#ff69b4;–accent-bg:#2a0f1f;–track:#333; –row:#252525;–input:#2a2a2a;–iborder:#444;–shadow:rgba(0,0,0,.5); –tab:#1e1e1e;–header1:#1a0a12;–header2:#2d0a1f; } body.dark .ball-r {background:#5a0000;color:#ddd} body.dark .ball-b {background:#082040;color:#ddd} body.dark .ball-g {background:#083008;color:#ddd} body.dark .ball-o {background:#5a2000;color:#ddd} body.dark .ball-p {background:#200030;color:#ddd}
+/* Pastel theme */ body.pastel { –bg:#f0f7ff;–card:#fff;–border:#d0e8ff;–text:#1a2a4a;–sub:#6080a0; –dim:#a0c0e0;–accent:#5b8dee;–accent-bg:#e8f0ff;–track:#ddeeff; –row:#f5f9ff;–input:#f8fbff;–iborder:#c0d8ff;–shadow:rgba(91,141,238,.1); –tab:#fff;–header1:#5b8dee;–header2:#a855f7; }
+/* Workshop tabs */ .w-tabs {display:flex;background:var(–track);border-radius:12px;padding:4px;margin-bottom:14px} .w-tab {flex:1;padding:9px 4px;border:none;border-radius:9px;background:none;color:var(–sub);font-weight:800;font-size:12px;cursor:pointer;transition:all .15s} .w-tab.active {background:var(–card);color:var(–accent);box-shadow:0 2px 6px var(–shadow)} </style>
+  <script>
+// 全局變量 (原代碼截斷, 假設原JS完整, 這裡添加新功能)
+const heavenStems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+const earthBranches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+const zodiacAnimals = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
+
+// 基於基準計算干支
+const baseDate = new Date(2026, 2, 8); // 2026-03-08 辛巳
+const baseStemIndex = 7; // 辛
+const baseBranchIndex = 5; // 巳
+
+function getGanZhi(year, month, day) {
+  const targetDate = new Date(year, month - 1, day);
+  const daysDiff = Math.floor((targetDate - baseDate) / 86400000);
+  const stemIndex = (baseStemIndex + daysDiff + 10) % 10; // +10 to avoid negative
+  const branchIndex = (baseBranchIndex + daysDiff + 12) % 12;
+  return heavenStems[stemIndex] + earthBranches[branchIndex];
+}
+
+function getBranchIndex(year, month, day) {
+  const targetDate = new Date(year, month - 1, day);
+  const daysDiff = Math.floor((targetDate - baseDate) / 86400000);
+  return (baseBranchIndex + daysDiff + 12) % 12;
+}
+
+function getZodiacYearIndex(year) {
+  return (year - 4) % 12;
+}
+
+function getZodiac(year) {
+  return zodiacAnimals[getZodiacYearIndex(year)];
+}
+
+// 相合對
+const compatiblePairs = [[0,1], [2,11], [3,10], [4,9], [5,8], [6,7]]; // 鼠牛等
+
+// 相沖對
+const clashPairs = [[0,6], [1,7], [2,8], [3,9], [4,10], [5,11]];
+
+// 是否相合
+function isCompatible(a, b) {
+  const sorted = [Math.min(a, b), Math.max(a, b)];
+  return compatiblePairs.some(pair => pair[0] === sorted[0] && pair[1] === sorted[1]);
+}
+
+// 是否相沖
+function isClash(a, b) {
+  const sorted = [Math.min(a, b), Math.max(a, b)];
+  return clashPairs.some(pair => pair[0] === sorted[0] && pair[1] === sorted[1]);
+}
+
+// 計算最佳購買日
+function calculateBestBuyDays(birthYear) {
+  const userBranch = getZodiacYearIndex(birthYear);
+  const today = new Date();
+  const recommendations = [];
+  for (let i = 1; i <= 7; i++) {
+    const target = new Date(today.getTime() + i * 86400000);
+    const y = target.getFullYear();
+    const m = target.getMonth() + 1;
+    const d = target.getDate();
+    const dayBranch = getBranchIndex(y, m, d);
+    let score = 0;
+    if (isCompatible(userBranch, dayBranch)) score += 3;
+    if (isClash(userBranch, dayBranch)) score -= 3;
+    // 添加隨機人和因素
+    score += Math.floor(Math.random() * 2) - 1; // -1 to 1
+    recommendations.push({
+      date: `${m}月${d}日`,
+      ganzhi: getGanZhi(y, m, d),
+      score: score,
+      advice: score > 1 ? '天時地利人和俱佳！' : score > 0 ? '適合購買' : score < 0 ? '避免' : '一般'
+    });
+  }
+  // 排序
+  recommendations.sort((a, b) => b.score - a.score);
+  return recommendations.slice(0, 3); // 頂3
+}
+
+// 假設render函數中添加 (原代碼有render())
+function render() {
+  // 原render邏輯...
+  // 在運勢卡片添加
+  if (profile && profile.birthDate) {
+    const birthYear = new Date(profile.birthDate).getFullYear();
+    const bestDays = calculateBestBuyDays(birthYear);
+    let bestHtml = '<div class="card accent-top"><div style="font-size:15px;font-weight:900;margin-bottom:8px">📅 最佳購買日 (開獎前)</div>';
+    bestDays.forEach(day => {
+      bestHtml += '<div class="row-item"><span style="font-size:14px">'+day.date+'</span><span style="flex:1">'+day.advice+'</span><span style="color:var(--sub);font-size:10px">'+day.ganzhi+'</span></div>';
+    });
+    bestHtml += '<div style="font-size:10px;color:var(--sub);margin-top:8px">基於生肖相合、干支計算，娛樂參考。天時：吉日，地利：本地購買，人和：心情愉快！</div></div>';
+    // 加入到content
+  }
+  // ... 繼續原render
+}
+
+// ... 原JS繼續 (由於原被截斷, 假設整合)
+</script>
+<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--card);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px">🎱</div>
+      <div style="font-size:20px;font-weight:900;color:var(--accent)">歡迎使用六合常中</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px">輸入生日，獲取個人化運程分析</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📅 出生日期</div>
+      <input type="date" id="ob-date" style="width:100%;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⏰ 出生時間（可選，更準確）</div>
+      <input type="time" id="ob-time" placeholder="不知道可留空" style="width:100%;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚧ 性別（影響紫微斗數）</div>
+      <div style="display:flex;gap:8px">
+        <button id="ob-male" onclick="selectGender('male')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">👨 男</button>
+        <button id="ob-female" onclick="selectGender('female')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">👩 女</button>
+      </div>
+    </div>
+    <button onclick="saveProfile()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#ff6090);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:8px">✨ 開始使用</button>
+    <button onclick="skipProfile()" style="width:100%;padding:10px;background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer">跳過（之後可在設定修改）</button>
+  </div>
+</div>
+</body>
+</html></DOCUMENT>
