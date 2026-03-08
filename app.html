@@ -230,12 +230,9 @@ body.pastel{
       <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
     </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">💰 打賞設定</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:6px">Ko-fi 網址</div>
-      <input id="kofi-input" type="text" placeholder="https://ko-fi.com/你的名字" style="margin-bottom:8px"/>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:6px">FPS 電話/電郵</div>
-      <input id="fps-input" type="text" placeholder="98765432 或 yourname@email.com" style="margin-bottom:8px"/>
-      <button class="btn btn-primary" onclick="saveDonationSettings()" style="width:100%">💾 儲存打賞設定</button>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">👤 個人資料</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px">修改生日資料，更新運程分析</div>
+      <button class="btn btn-primary" onclick="closeSettings();editProfile();" style="width:100%">✏️ 修改生日 / 性別</button>
     </div>
   </div>
 </div>
@@ -271,6 +268,7 @@ body.pastel{
   <button class="tab-btn active" data-tab="latest">🏠主頁</button>
   <button class="tab-btn" data-tab="workshop">🎰工坊</button>
   <button class="tab-btn" data-tab="heatmap">🔥熱力</button>
+  <button class="tab-btn" data-tab="fortune">🔮運程</button>
   <button class="tab-btn" data-tab="alarm">⏰提醒</button>
   <button class="tab-btn" data-tab="history">📜歷史</button>
   <button class="tab-btn" data-tab="stats">📊統計</button>
@@ -345,6 +343,7 @@ let hist = [...HISTORY];
 let currentTab = 'latest';
 let theme = 'fun';
 let alarmOn = false, alarmMins = 30, alarmFired = false;
+let userProfile = JSON.parse(localStorage.getItem('ms_profile')||'null');
 let prizeOn = false, prizeThr = 1e8, prizeShown = false;
 let curPrize = 8000000;
 let picked = [], checkResult = null;
@@ -578,6 +577,117 @@ function startCountdown(){
   },1000);
 }
 
+function getDailyFortune(profile){
+  if(!profile||!profile.date)return null;
+  var bdate=new Date(profile.date);
+  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
+  var today=new Date();
+  var ty=today.getFullYear(),tm=today.getMonth()+1,td=today.getDate();
+  var gender=profile.gender||'unknown';
+  
+  // Get zodiac (with CNY correction)
+  var zodiac=getZodiac(by,bm,bd);
+  var star=getStar(bm,bd);
+  
+  // Day stem/branch (天干地支) for today
+  var stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var branches=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  var daysSince=Math.floor((today-new Date('1900-01-31'))/86400000);
+  var stem=stems[((daysSince%10)+10)%10];
+  var branch=branches[((daysSince%12)+12)%12];
+  
+  // Five elements of birth year
+  var elements=['木','木','火','火','土','土','金','金','水','水'];
+  var birthElement=elements[(by-1900)%10];
+  
+  // Today's element
+  var todayElement=elements[((daysSince%10)+10)%10];
+  
+  // Birth hour pillar (四柱 - hour)
+  var birthHour=profile.time?parseInt(profile.time.split(':')[0]):-1;
+  var hourBranch=birthHour>=0?branches[Math.floor(((birthHour+1)%24)/2)]:'未知';
+  
+  // Simple luck score based on element interaction
+  var elementScore={木:{木:70,火:85,土:50,金:45,水:90},火:{木:85,火:70,土:80,金:50,水:40},
+    土:{木:50,火:80,土:70,金:85,水:50},金:{木:45,火:50,土:80,金:70,水:85},水:{木:90,火:40,土:50,金:80,水:70}};
+  var baseScore=(elementScore[birthElement]&&elementScore[birthElement][todayElement])||70;
+  
+  // Adjust for zodiac compatibility with today's branch
+  var zodiacBranch={'鼠':'子','牛':'丑','虎':'寅','兔':'卯','龍':'辰','蛇':'巳',
+    '馬':'午','羊':'未','猴':'申','雞':'酉','狗':'戌','豬':'亥'};
+  var myBranch=zodiacBranch[zodiac]||'';
+  var branchIdx=branches.indexOf(myBranch);
+  var todayIdx=branches.indexOf(branch);
+  var diff=Math.abs(branchIdx-todayIdx);
+  if(diff===0)baseScore+=15; // same branch = very lucky
+  else if(diff===4||diff===8)baseScore+=10; // compatible
+  else if(diff===6)baseScore-=15; // clash
+  baseScore=Math.min(99,Math.max(30,baseScore));
+  
+  // Fortune messages
+  var fortunes=[
+    {min:85,emoji:'🌟',title:'大吉之日',msg:'今日五行相生，諸事順遂。'+zodiac+'年生者與今日地支相合，財運、事業皆有突破機會。'},
+    {min:70,emoji:'✨',title:'吉日',msg:'今日運勢平穩向上。'+star+'座與'+stem+branch+'日相輔，宜積極行動，把握良機。'},
+    {min:55,emoji:'☁️',title:'平穩之日',msg:'今日運勢中平，宜謹慎行事。'+birthElement+'與'+todayElement+'相遇，需注意細節。'},
+    {min:0,emoji:'🌙',title:'需謹慎',msg:'今日五行稍有相剋，宜靜不宜動。'+zodiac+'年生者今日宜守成，避免冒進。'}
+  ];
+  var msg=fortunes.find(function(f){return baseScore>=f.min;})||fortunes[fortunes.length-1];
+  
+  // Lucky numbers based on birth data + today
+  var luckyNums=[];
+  var seed=(by+bm*bd+ty*tm+td)%49;
+  for(var i=0;i<3;i++){
+    var n=((seed*(i+1)*7+by+td)%49)+1;
+    if(!luckyNums.includes(n))luckyNums.push(n);
+  }
+  // Add element-based number
+  var elemNums={木:[3,4,8,9],火:[1,2,6,7],土:[5,10,15,20],金:[11,12,16,17],水:[13,14,18,19]};
+  var en=(elemNums[birthElement]||[1])[daysSince%4];
+  if(!luckyNums.includes(en))luckyNums.push(en);
+  
+  return {
+    emoji:msg.emoji,
+    title:msg.title,
+    subtitle:zodiac+'｜'+star+'座｜'+birthElement+'命｜今日'+stem+branch,
+    text:msg.msg+'（時柱：'+hourBranch+'時）',
+    luckyNums:luckyNums,
+    score:baseScore
+  };
+}
+function addPrizeReminder(){
+  prizeOn=true;prizeShown=false;render();
+  var nd=calcNextDraw();
+  if(!nd){showToast('未能取得攪珠時間','err');return;}
+  // Generate .ics for next 10 draws (covers ~1 month)
+  var icsEvents='';
+  var drawDate=new Date(nd.date+'T13:30:00Z');
+  for(var i=0;i<10;i++){
+    // Skip to next draw day (Tue=2, Thu=4, Sat=6)
+    if(i>0){
+      drawDate=new Date(drawDate.getTime());
+      do{drawDate=new Date(drawDate.getTime()+86400000);}
+      while(![2,4,6].includes(drawDate.getDay()));
+      drawDate.setUTCHours(13,30,0,0);
+    }
+    var alarmTime=new Date(drawDate.getTime()-3600000); // 1hr before
+    var endTime=new Date(drawDate.getTime()+3600000);
+    function fmt(d){return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';}
+    icsEvents+='BEGIN:VEVENT\r\n'
+      +'DTSTART:'+fmt(alarmTime)+'\r\n'
+      +'DTEND:'+fmt(endTime)+'\r\n'
+      +'SUMMARY:🎱 六合彩攪珠提醒\r\n'
+      +'DESCRIPTION:今晚9:30攪珠，頭獎門檻≥'+fmtPrize(prizeThr)+'\r\n'
+      +'BEGIN:VALARM\r\nTRIGGER:-PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:六合彩攪珠\r\nEND:VALARM\r\n'
+      +'END:VEVENT\r\n';
+  }
+  var ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//六合常中//App//ZH\r\n'+icsEvents+'END:VCALENDAR';
+  var b=new Blob([ics],{type:'text/calendar'});
+  var u=URL.createObjectURL(b);
+  var a=document.createElement('a');
+  a.href=u;a.download='lottery-reminders.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  showToast('📅 已下載10期提醒！打開檔案加入日曆','ok',6000);
+}
 function addToCalendar(){
   var nd=calcNextDraw();if(!nd){showToast('未能取得攪珠時間','err');return;}
   var dt=new Date(nd.date+'T13:30:00Z');
@@ -609,6 +719,39 @@ function triggerAlarm(type){
 // ── Refresh ──
 let refreshLog = [];
 var _refreshXhr=null;
+var _obGender='';
+function selectGender(g){
+  _obGender=g;
+  document.getElementById('ob-male').style.borderColor=g==='male'?'var(--accent)':'var(--border)';
+  document.getElementById('ob-male').style.background=g==='male'?'var(--accent-bg)':'var(--card)';
+  document.getElementById('ob-female').style.borderColor=g==='female'?'var(--accent)':'var(--border)';
+  document.getElementById('ob-female').style.background=g==='female'?'var(--accent-bg)':'var(--card)';
+}
+function saveProfile(){
+  var d=document.getElementById('ob-date').value;
+  var t=document.getElementById('ob-time').value||'';
+  if(!d){showToast('請輸入出生日期','err');return;}
+  var profile={date:d,time:t,gender:_obGender||'unknown',saved:Date.now()};
+  localStorage.setItem('ms_profile',JSON.stringify(profile));
+  userProfile=profile;
+  document.getElementById('onboarding-modal').style.display='none';
+  // Update wBday for workshop
+  wBday=d;
+  render();
+  showToast('✨ 已儲存！運程分析已啟用','ok',3000);
+}
+function skipProfile(){
+  document.getElementById('onboarding-modal').style.display='none';
+}
+function editProfile(){
+  var m=document.getElementById('onboarding-modal');
+  m.style.display='flex';
+  if(userProfile){
+    document.getElementById('ob-date').value=userProfile.date||'';
+    document.getElementById('ob-time').value=userProfile.time||'';
+    if(userProfile.gender)selectGender(userProfile.gender);
+  }
+}
 function closeModal(){document.querySelectorAll('[data-modal]').forEach(function(e){e.remove();});}
 function doRefresh(){
   if(_refreshXhr)return;
@@ -806,9 +949,17 @@ document.getElementById('tabs').addEventListener('click',function(e){
 });
 
 // Auto-refresh on startup
-setTimeout(function(){
-  doRefresh();
-}, 1500);
+setTimeout(function(){ doRefresh(); }, 1500);
+// Show onboarding if no profile
+if(!localStorage.getItem('ms_profile')){
+  setTimeout(function(){
+    var m=document.getElementById('onboarding-modal');
+    if(m)m.style.display='flex';
+  },500);
+}else{
+  userProfile=JSON.parse(localStorage.getItem('ms_profile'));
+  if(userProfile&&userProfile.date)wBday=userProfile.date;
+}
 
 // ── MAIN RENDER ──
 function render(){
@@ -818,6 +969,7 @@ function render(){
     case 'latest': c.innerHTML=renderLatest();break;
     case 'workshop': c.innerHTML=renderWorkshop();break;
     case 'heatmap': c.innerHTML=renderHeatmap();break;
+    case 'fortune': c.innerHTML=renderFortune();break;
     case 'alarm': c.innerHTML=renderAlarm();break;
     case 'history': c.innerHTML=renderHistory();break;
     case 'stats': c.innerHTML=renderStats();break;
@@ -1075,42 +1227,197 @@ function renderHeatmap(){
 }
 
 // ═══ ALARM ═══
+
+function renderFortune(){
+  var out='';
+
+  // No profile yet
+  if(!userProfile||!userProfile.date){
+    out+='<div class="card" style="text-align:center;padding:30px">';
+    out+='<div style="font-size:48px;margin-bottom:12px">🔮</div>';
+    out+='<div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:8px">輸入生日開啟運程</div>';
+    out+='<div style="font-size:12px;color:var(--sub);margin-bottom:16px">基於紫微斗數、易經八卦、韓國四柱推算你的每日運程</div>';
+    out+='<button class="btn btn-primary" onclick="editProfile()">✨ 輸入生日資料</button>';
+    out+='</div>';
+    out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+    out+='<span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
+    return out;
+  }
+
+  var f=getDailyFortune(userProfile);
+  var bdate=new Date(userProfile.date);
+  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
+  var zodiac=getZodiac(by,bm,bd);
+  var star=getStar(bm,bd);
+  var today=new Date();
+  var stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var branches=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  var elements=['木','木','火','火','土','土','金','金','水','水'];
+  var daysSince=Math.floor((today-new Date('1900-01-31'))/86400000);
+  var stem=stems[((daysSince%10)+10)%10];
+  var branch=branches[((daysSince%12)+12)%12];
+  var birthElement=elements[(by-1900+200)%10];
+  var todayElement=elements[((daysSince%10)+10)%10];
+
+  // Score bar color
+  var scoreColor=f.score>=80?'#2e7d32':f.score>=60?'#f57f17':'#c62828';
+
+  // Header
+  out+='<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:4px">'+today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日 · '+stem+branch+'日</div>';
+  out+='<div style="font-size:32px;margin-bottom:4px">'+f.emoji+'</div>';
+  out+='<div style="font-size:20px;font-weight:900;color:var(--accent);margin-bottom:4px">'+f.title+'</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:12px">'+f.subtitle+'</div>';
+  // Score bar
+  out+='<div style="background:var(--row);border-radius:20px;height:10px;margin-bottom:4px;overflow:hidden">';
+  out+='<div style="height:100%;width:'+f.score+'%;background:linear-gradient(90deg,'+scoreColor+','+scoreColor+'88);border-radius:20px;transition:width 1s"></div></div>';
+  out+='<div style="font-size:11px;font-weight:700;color:'+scoreColor+'">今日運勢 '+f.score+'/100</div></div>';
+
+  // Today's fortune detail
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">📖 今日運程詳解</div>';
+  out+='<div style="font-size:12px;color:var(--text);line-height:1.9;margin-bottom:12px">'+f.text+'</div>';
+
+  // Four pillars display
+  out+='<div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px">🏛️ 四柱八字</div>';
+  var birthHour=userProfile.time?parseInt(userProfile.time.split(':')[0]):-1;
+  var hourBranch=birthHour>=0?branches[Math.floor(((birthHour+1)%24)/2)]:'?';
+  var hourStemIdx=birthHour>=0?(Math.floor(((birthHour+1)%24)/2)*2+Math.floor(by%10/2))%10:null;
+  var hourStem=hourStemIdx!==null?stems[hourStemIdx]:'?';
+  var yearStemIdx=(by-1900+200)%10;
+  var yearBranchIdx=(by-1900+200)%12;
+  var cols=[
+    {label:'年柱',stem:stems[yearStemIdx],branch:branches[yearBranchIdx]},
+    {label:'月柱',stem:stems[((bm-1)*2+yearStemIdx)%10],branch:branches[(bm-1+yearBranchIdx)%12]},
+    {label:'日柱',stem:stems[((daysSince%10)+10)%10],branch:branches[((daysSince%12)+12)%12]},
+    {label:'時柱',stem:hourStem,branch:hourBranch}
+  ];
+  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">';
+  cols.forEach(function(c){
+    out+='<div style="background:var(--accent-bg);border-radius:8px;padding:8px;text-align:center">';
+    out+='<div style="font-size:9px;color:var(--sub)">'+c.label+'</div>';
+    out+='<div style="font-size:18px;font-weight:900;color:var(--accent)">'+c.stem+'</div>';
+    out+='<div style="font-size:14px;font-weight:700;color:var(--text)">'+c.branch+'</div></div>';
+  });
+  out+='</div>';
+  out+='</div>';
+
+  // Five elements analysis
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">☯️ 五行分析</div>';
+  var elemEmoji={木:'🌳',火:'🔥',土:'🌍',金:'⚙️',水:'💧'};
+  var elemDesc={
+    木:{desc:'木主仁，代表生長、創意、上進心',today:'今日'+todayElement+'運，'+( birthElement===todayElement?'同行相助，運勢倍增！':'五行'+(isGenerating(birthElement,todayElement)?'相生，貴人相助':isControlling(birthElement,todayElement)?'相剋，需謹慎行事':'中和，平穩發展'))},
+    火:{desc:'火主禮，代表熱情、智慧、光明',today:''},
+    土:{desc:'土主信，代表穩重、包容、務實',today:''},
+    金:{desc:'金主義，代表果斷、正直、精確',today:''},
+    水:{desc:'水主智，代表智慧、流動、適應',today:''}
+  };
+  function isGenerating(a,b){var g={木:'火',火:'土',土:'金',金:'水',水:'木'};return g[a]===b;}
+  function isControlling(a,b){var c={木:'土',土:'水',水:'火',火:'金',金:'木'};return c[a]===b;}
+  var rel=isGenerating(birthElement,todayElement)?'相生 ✅':isControlling(birthElement,todayElement)?'相剋 ⚠️':isGenerating(todayElement,birthElement)?'被生 🌟':isControlling(todayElement,birthElement)?'被剋 ❌':'比和 ☯️';
+  out+='<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px">';
+  out+='<div style="text-align:center"><div style="font-size:28px">'+elemEmoji[birthElement]+'</div><div style="font-size:11px;font-weight:700;color:var(--accent)">命元：'+birthElement+'</div></div>';
+  out+='<div style="font-size:14px;font-weight:700;color:var(--sub)">'+rel+'</div>';
+  out+='<div style="text-align:center"><div style="font-size:28px">'+elemEmoji[todayElement]+'</div><div style="font-size:11px;font-weight:700;color:var(--sub)">今日：'+todayElement+'</div></div>';
+  out+='</div>';
+  out+='<div style="font-size:11px;color:var(--sub);text-align:center;line-height:1.7">'+elemDesc.木.today.replace('木主仁，','')+'</div>';
+  out+='</div>';
+
+  // Korean Saju - simplified
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">🇰🇷 韓國四柱（사주）</div>';
+  var sajuScore=Math.round((f.score+Math.sin(by*bm*bd)*10+65)/2);
+  sajuScore=Math.min(99,Math.max(40,sajuScore));
+  var sajuAspects=[
+    {k:'재물운',label:'財運',score:Math.min(99,Math.max(30,sajuScore+Math.round(Math.sin(by+tm)*15)))},
+    {k:'애정운',label:'感情',score:Math.min(99,Math.max(30,sajuScore+Math.round(Math.cos(bm+td)*12)))},
+    {k:'건강운',label:'健康',score:Math.min(99,Math.max(30,sajuScore+Math.round(Math.sin(bd*by)*8)))},
+    {k:'직업운',label:'事業',score:Math.min(99,Math.max(30,sajuScore+Math.round(Math.cos(by+bm)*10)))}
+  ];
+  var today2=new Date();var tm2=today2.getMonth()+1;var td2=today2.getDate();
+  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  sajuAspects.forEach(function(a){
+    var c2=a.score>=75?'#2e7d32':a.score>=55?'#f57f17':'#c62828';
+    out+='<div style="background:var(--row);border-radius:10px;padding:10px">';
+    out+='<div style="display:flex;justify-content:space-between;margin-bottom:6px">';
+    out+='<span style="font-size:11px;font-weight:700">'+a.label+'</span>';
+    out+='<span style="font-size:11px;font-weight:900;color:'+c2+'">'+a.score+'</span></div>';
+    out+='<div style="background:var(--border);border-radius:10px;height:6px;overflow:hidden">';
+    out+='<div style="width:'+a.score+'%;height:100%;background:'+c2+';border-radius:10px"></div></div></div>';
+  });
+  out+='</div></div>';
+
+  // Lucky numbers
+  out+='<div class="card" style="margin-bottom:10px">';
+  out+='<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px">🍀 今日幸運號碼</div>';
+  out+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+  f.luckyNums.forEach(function(n){out+=ball(n,36);});
+  out+='</div>';
+  out+='<div style="font-size:10px;color:var(--dim)">根據出生八字與今日天干地支推算</div></div>';
+
+  // Edit profile button
+  out+='<div style="text-align:center;margin-bottom:10px">';
+  out+='<button onclick="editProfile()" style="font-size:11px;color:var(--dim);background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer">✏️ 修改生日資料</button></div>';
+
+  // Ad slot
+  out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  out+='<span style="font-size:10px;color:var(--dim)">廣告位</span></div>';
+  return out;
+}
+
 function renderAlarm(){
+  var PRESETS=[{l:'$800萬（每次都提醒）',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
   var nd=calcNextDraw();
-  var notifPerm=typeof Notification!=='undefined'?Notification.permission:'unavailable';
-  var PRESETS=[{l:'$800萬',v:8e6},{l:'$3千萬',v:3e7},{l:'$5千萬',v:5e7},{l:'$1億',v:1e8},{l:'$1.5億',v:1.5e8},{l:'$2億',v:2e8}];
-  var out='<div class="card accent-top">';
-  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:12px">⏰ 攪珠提醒</div>';
-  out+='<div style="background:var(--accent-bg);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px">';
-  out+='<div style="font-size:10px;color:var(--sub);margin-bottom:4px">'+nd.drawNum+' · '+nd.date+' 晚上 9:30</div>';
-  out+='<div id="countdown" style="font-variant-numeric:tabular-nums;font-size:34px;font-weight:900;color:var(--accent);letter-spacing:2px">--:--:--</div></div>';
-  out+='<div class="chips" style="margin-bottom:14px">';
-  var amins=[30,60,120,360,720,1440];
-  var aminL=['30分','1小時','2小時','6小時','12小時','24小時'];
-  for(var i=0;i<amins.length;i++) out+='<button class="pill '+(alarmMins===amins[i]?'active':'')+'" onclick="alarmMins='+amins[i]+';render()">'+aminL[i]+'前</button>';
-  out+='</div>';
-  out+='<div style="display:flex;gap:8px;margin-bottom:8px">';
-  out+='<button class="btn btn-primary" style="flex:1" onclick="addToCalendar()">📅 加入日曆</button>';
-  out+='<button class="btn btn-ghost" style="flex:1" onclick="setPhoneAlarm()">⏰ 設鬧鐘</button>';
-  out+='</div>';
-  out+='<div style="font-size:10px;color:var(--dim);text-align:center">💡 加入日曆最可靠，iOS Android 都支援</div></div>';
-  out+='<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:10px">💰 頭獎金額提醒</div>';
-  out+='<div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="prize-input" placeholder="自訂門檻金額" style="flex:1;margin-bottom:0"/><button class="btn btn-ghost" onclick="setCustomPrizeThr()">設定</button></div>';
+  var out='';
+
+  // Prize threshold card
+  out+='<div class="card accent-top">';
+  out+='<div style="font-size:15px;font-weight:900;color:var(--accent);margin-bottom:4px">🔔 頭獎金額提醒</div>';
+  out+='<div style="font-size:11px;color:var(--sub);margin-bottom:14px">設定頭獎門檻，達到後自動加入日曆提醒你！</div>';
   out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px">';
-  for(var i=0;i<PRESETS.length;i++){var p=PRESETS[i];out+='<button onclick="prizeThr='+p.v+';prizeShown=false;render()" style="padding:9px;border-radius:10px;border:1.5px solid '+(prizeThr===p.v?'var(--accent)':'var(--border)')+';background:'+(prizeThr===p.v?'var(--accent-bg)':'var(--card)')+';color:'+(prizeThr===p.v?'var(--accent)':'var(--sub)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:left">'+(prizeThr===p.v?'✓ ':'')+p.l+'</button>';}
-  out+='</div><button class="btn '+(prizeOn?'btn-danger':'btn-success')+' btn-full" onclick="prizeOn=!prizeOn;prizeShown=false;render()">'+(prizeOn?'✅ 已開啟（≥'+fmtPrize(prizeThr)+'）— 點此關閉':'💰 開啟金額提醒')+'</button></div>';
-  out+='<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:10px">📱 推送通知</div>';
-  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--sub)">系統通知</span>';
-  out+='<span style="font-weight:700;font-size:12px;color:'+(notifPerm==='granted'?'#2e7d32':notifPerm==='denied'?'#c62828':'#f57f17')+'">'+(notifPerm==='granted'?'✅ 已允許':notifPerm==='denied'?'❌ 已拒絕':'⚠️ 未設定')+'</span></div>';
-  if(notifPerm!=='granted') out+='<button class="btn btn-ghost btn-full" onclick="requestNotif()">📲 允許推送通知</button>';
-  out+='<div style="font-size:10px;color:var(--dim);margin-top:8px">💡 iPhone 需先在 Safari「加至主畫面」</div></div>';
+  for(var i=0;i<PRESETS.length;i++){
+    var p=PRESETS[i];
+    var active=prizeThr===p.v;
+    out+='<button onclick="prizeThr='+p.v+';prizeShown=false;render()" style="padding:10px 8px;border-radius:10px;border:1.5px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent-bg)':'var(--card)')+';color:'+(active?'var(--accent)':'var(--sub)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:left">'+(active?'✓ ':'')+p.l+'</button>';
+  }
+  out+='</div>';
+  out+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+  out+='<input type="text" id="prize-input" placeholder="自訂金額（如：50000000）" style="flex:1;margin-bottom:0"/>';
+  out+='<button class="btn btn-ghost" onclick="setCustomPrizeThr()">設定</button>';
+  out+='</div>';
   
-  // 廣告位
+  // Current prize status
+  var latestPrize=hist&&hist[0]?hist[0].prize||0:0;
+  out+='<div style="background:var(--accent-bg);border-radius:10px;padding:10px;margin-bottom:12px;text-align:center">';
+  out+='<div style="font-size:10px;color:var(--sub)">下期 '+nd.drawNum+' · '+nd.date+'</div>';
+  out+='<div style="font-size:18px;font-weight:900;color:var(--accent)">$8百萬起</div>';
+  out+='</div>';
+  
+  // One-click calendar reminder button
+  out+='<button class="btn btn-primary btn-full" style="margin-bottom:8px" onclick="addPrizeReminder()">';
+  out+=(prizeOn?'✅ 已設提醒 · 再按重新下載日曆':'📅 一鍵設定提醒（加入日曆）');
+  out+='</button>';
+  out+='<div style="font-size:10px;color:var(--dim);text-align:center">下載後打開 .ics 檔案 → 系統自動加入日曆 → 攪珠前會彈出提示</div>';
+  out+='</div>';
+
+  // How it works card
+  out+='<div class="card">';
+  out+='<div style="font-size:13px;font-weight:800;margin-bottom:10px">💡 如何運作</div>';
+  out+='<div style="font-size:11px;color:var(--sub);line-height:2">';
+  out+='📅 按「一鍵設定提醒」→ 下載日曆檔案<br/>';
+  out+='📲 打開下載的檔案 → 點「加入日曆」<br/>';
+  out+='🔔 攪珠當天 → 手機自動彈出提醒<br/>';
+  out+='🎱 逢星期二、四、六 · 晚上 9:30 攪珠';
+  out+='</div></div>';
+
+  // Ad slot
   out+='<div class="ad-slot" style="margin:10px 0;min-height:60px;background:var(--row);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center">';
   out+='<span style="font-size:10px;color:var(--dim)">廣告位</span>';
   out+='</div>';
   return out;
 }
+
 function setCustomPrizeThr(){var v=parseInt((document.getElementById('prize-input').value||'').replace(/,/g,''));if(!isNaN(v)&&v>0){prizeThr=v;prizeShown=false;render();}}
 async function requestNotif(){if(typeof Notification==='undefined'){showToast('此瀏覽器不支援通知','err');return;}var p=await Notification.requestPermission();showToast(p==='granted'?'✅ 通知已開啟':'請允許通知',p==='granted'?'ok':'err');render();}
 
@@ -1466,5 +1773,31 @@ render();
 }
 
 </script>
+<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--card);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px">🎱</div>
+      <div style="font-size:20px;font-weight:900;color:var(--accent)">歡迎使用六合常中</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px">輸入生日，獲取個人化運程分析</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📅 出生日期</div>
+      <input type="date" id="ob-date" style="width:100%;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⏰ 出生時間（可選，更準確）</div>
+      <input type="time" id="ob-time" placeholder="不知道可留空" style="width:100%;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚧ 性別（影響紫微斗數）</div>
+      <div style="display:flex;gap:8px">
+        <button id="ob-male" onclick="selectGender('male')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">👨 男</button>
+        <button id="ob-female" onclick="selectGender('female')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">👩 女</button>
+      </div>
+    </div>
+    <button onclick="saveProfile()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#ff6090);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:8px">✨ 開始使用</button>
+    <button onclick="skipProfile()" style="width:100%;padding:10px;background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer">跳過（之後可在設定修改）</button>
+  </div>
+</div>
 </body>
 </html>
