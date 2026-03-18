@@ -1,4 +1,4 @@
-<!-- v20260319b -->
+<!-- v20260319c -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -581,15 +581,8 @@ function setFont(scale){
   });
 }
 function applyFont(){
-  var app=document.getElementById('content')||document.body;
-  if(fontScale===1){
-    app.style.zoom='';
-    app.style.transform='';
-    app.style.transformOrigin='';
-  } else {
-    // zoom works on iOS Safari and most modern browsers
-    app.style.zoom=fontScale;
-  }
+  // Apply zoom to entire page (body) so header, tabs, content all scale
+  document.body.style.zoom = fontScale===1 ? '' : fontScale;
   // Update active state of font buttons
   document.querySelectorAll('.font-btn').forEach(function(b){
     b.classList.toggle('active', parseFloat(b.dataset.scale)===fontScale);
