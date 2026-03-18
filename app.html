@@ -1,4 +1,4 @@
-<!-- v202603181537 -->
+<!-- v20260319b -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -581,7 +581,19 @@ function setFont(scale){
   });
 }
 function applyFont(){
-  document.documentElement.style.fontSize = fontScale===1?'':fontScale===1.2?'18px':'22px';
+  var app=document.getElementById('content')||document.body;
+  if(fontScale===1){
+    app.style.zoom='';
+    app.style.transform='';
+    app.style.transformOrigin='';
+  } else {
+    // zoom works on iOS Safari and most modern browsers
+    app.style.zoom=fontScale;
+  }
+  // Update active state of font buttons
+  document.querySelectorAll('.font-btn').forEach(function(b){
+    b.classList.toggle('active', parseFloat(b.dataset.scale)===fontScale);
+  });
 }
 
 // ── Lucky bar ──
@@ -1389,22 +1401,34 @@ function renderFortune(){
   var palaceEmoji={'命宮':'👤','父母宮':'👨‍👩‍👦','福德宮':'🌸','田宅宮':'🏠','官祿宮':'💼','交友宮':'🤝','遷移宮':'✈️','疾厄宮':'💊','財帛宮':'💰','子女宮':'👶','夫妻宮':'💍','兄弟宮':'👫'};
   var palaceDesc={'命宮':'個性格局','父母宮':'家庭背景','福德宮':'內心世界','田宅宮':'不動產','官祿宮':'事業','交友宮':'人際','遷移宮':'出外','疾厄宮':'健康','財帛宮':'財運','子女宮':'子嗣','夫妻宮':'感情','兄弟宮':'手足'};
   var palaces=f.ab?f.ab.palaces||[]:[];
+  // iztro returns simplified Chinese names without 宮 suffix
+  // Map all variants to Traditional Chinese with 宮 suffix
+  var simp2trad={
+    '命宫':'命宮','兄弟':'兄弟宮','夫妻':'夫妻宮','子女':'子女宮',
+    '财帛':'財帛宮','疾厄':'疾厄宮','迁移':'遷移宮','仆役':'交友宮',
+    '官禄':'官祿宮','田宅':'田宅宮','福德':'福德宮','父母':'父母宮',
+    // Already have 宮 suffix variants
+    '命宮':'命宮','兄弟宮':'兄弟宮','夫妻宮':'夫妻宮','子女宮':'子女宮',
+    '財帛宮':'財帛宮','疾厄宮':'疾厄宮','遷移宮':'遷移宮','交友宮':'交友宮',
+    '官祿宮':'官祿宮','田宅宮':'田宅宮','福德宮':'福德宮','父母宮':'父母宮'
+  };
   var palaceMap={};
   palaces.forEach(function(p){
-    palaceMap[p.name]=p;
-    // iztro alias: 僕役宮 = 交友宮
-    if(p.name==='僕役宮')palaceMap['交友宮']=p;
-    if(p.name==='交友宮')palaceMap['僕役宮']=p;
+    var trad=simp2trad[p.name]||p.name;
+    palaceMap[trad]=p;
   });
-  // Debug: log palace names to console
-  if(palaces.length>0&&window.console)console.log('iztro palaces:',palaces.map(function(p){return p.name+':'+(p.majorStars||[]).map(function(s){return s.name;}).join(',');}));
   out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
   palaceOrder.forEach(function(pname){
     var p=palaceMap[pname]||null;
     var isLife=pname==='命宮';
     var _mStars=p?(p.majorStars||p.stars||[]):[];
     var _nStars=p?(p.minorStars||p.auxStars||[]):[];
-    var majorStars=_mStars.map(function(s){return s.name+(s.mutagen||s.mutationSign?'·'+(s.mutagen||s.mutationSign):'');}).join(' ');
+    var _muMap={'化禄':'化祿','化权':'化權','化科':'化科','化忌':'化忌'};
+    var majorStars=_mStars.map(function(s){
+      var mg=s.mutagen||s.mutationSign||'';
+      mg=_muMap[mg]||mg;
+      return s.name+(mg?'·'+mg:'');
+    }).join(' ');
     var minorStars=_nStars.slice(0,2).map(function(s){return s.name;}).join(' ');
     out+='<div style="background:'+(isLife?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:8px;border:'+(isLife?'2px solid var(--accent)':'none')+'">';
     out+='<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
