@@ -1,9 +1,11 @@
-<!-- v20260309e -->
+<!-- v202603181537 -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8"/>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -244,12 +246,15 @@ body.pastel{
   <div class="float" style="font-size:28px;flex-shrink:0">🎱</div>
   <div class="title">
     <h1>六合常中</h1>
-    <p>娛樂數字分析 · 純屬好玩</p>
+    <p>娛樂數字分析 · 純屬好玩 <span style="opacity:0.6;font-size:8px">v181537</span></p>
   </div>
   <div class="theme-btns">
     <button class="theme-btn active" id="btn-fun" onclick="setTheme('fun')" title="歡樂">🎪</button>
     <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" title="夜間">🌙</button>
     <button class="theme-btn" id="btn-pastel" onclick="setTheme('pastel')" title="粉彩">🌸</button>
+    <button class="font-btn theme-btn" data-scale="1" onclick="setFont(1)" title="標準字體" style="font-size:10px;font-weight:700;letter-spacing:-0.5px">A</button>
+    <button class="font-btn theme-btn" data-scale="1.2" onclick="setFont(1.2)" title="大字體" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">A+</button>
+    <button class="font-btn theme-btn" data-scale="1.5" onclick="setFont(1.5)" title="超大字體" style="font-size:12px;font-weight:700;letter-spacing:-0.5px">A++</button>
   </div>
   <div id="draw-info">
     <div class="draw" id="hdr-draw">--/---</div>
@@ -343,7 +348,8 @@ const HISTORY=[
 // ── State ──
 let hist = [...HISTORY];
 let currentTab = 'latest';
-let theme = 'fun';
+let theme = localStorage.getItem('ms_theme')||'fun';
+var fontScale=parseFloat(localStorage.getItem('ms_font')||'1');
 let alarmOn = false, alarmMins = 30, alarmFired = false;
 let userProfile = JSON.parse(localStorage.getItem('ms_profile')||'null');
 let prizeOn = false, prizeThr = 1e8, prizeShown = false;
@@ -560,13 +566,27 @@ function showConfetti(){
 // ── Theme ──
 function setTheme(t){
   theme=t;
+  localStorage.setItem('ms_theme',t);
   document.body.className=t==='fun'?'':t;
   document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.id===`btn-${t}`));
+  applyFont();
   render();
+}
+function setFont(scale){
+  fontScale=scale;
+  localStorage.setItem('ms_font',scale);
+  applyFont();
+  document.querySelectorAll('.font-btn').forEach(function(b){
+    b.classList.toggle('active', parseFloat(b.dataset.scale)===scale);
+  });
+}
+function applyFont(){
+  document.documentElement.style.fontSize = fontScale===1?'':fontScale===1.2?'18px':'22px';
 }
 
 // ── Lucky bar ──
 function initLucky(){
+  applyFont();
   document.getElementById('lucky-fill').style.width=todayLuckyIndex+'%';
   document.getElementById('lucky-pct').textContent=todayLuckyIndex+'%';
   document.getElementById('lucky-msg').textContent=LUCKY_MSGS[Math.floor(todayLuckyIndex/15)];
@@ -1370,13 +1390,22 @@ function renderFortune(){
   var palaceDesc={'命宮':'個性格局','父母宮':'家庭背景','福德宮':'內心世界','田宅宮':'不動產','官祿宮':'事業','交友宮':'人際','遷移宮':'出外','疾厄宮':'健康','財帛宮':'財運','子女宮':'子嗣','夫妻宮':'感情','兄弟宮':'手足'};
   var palaces=f.ab?f.ab.palaces||[]:[];
   var palaceMap={};
-  palaces.forEach(function(p){palaceMap[p.name]=p;});
+  palaces.forEach(function(p){
+    palaceMap[p.name]=p;
+    // iztro alias: 僕役宮 = 交友宮
+    if(p.name==='僕役宮')palaceMap['交友宮']=p;
+    if(p.name==='交友宮')palaceMap['僕役宮']=p;
+  });
+  // Debug: log palace names to console
+  if(palaces.length>0&&window.console)console.log('iztro palaces:',palaces.map(function(p){return p.name+':'+(p.majorStars||[]).map(function(s){return s.name;}).join(',');}));
   out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
   palaceOrder.forEach(function(pname){
     var p=palaceMap[pname]||null;
     var isLife=pname==='命宮';
-    var majorStars=p?(p.majorStars||[]).map(function(s){return s.name+(s.mutagen?'·'+s.mutagen:'');}).join(' '):'';
-    var minorStars=p?(p.minorStars||[]).slice(0,2).map(function(s){return s.name;}).join(' '):'';
+    var _mStars=p?(p.majorStars||p.stars||[]):[];
+    var _nStars=p?(p.minorStars||p.auxStars||[]):[];
+    var majorStars=_mStars.map(function(s){return s.name+(s.mutagen||s.mutationSign?'·'+(s.mutagen||s.mutationSign):'');}).join(' ');
+    var minorStars=_nStars.slice(0,2).map(function(s){return s.name;}).join(' ');
     out+='<div style="background:'+(isLife?'var(--accent-bg)':'var(--row)')+';border-radius:10px;padding:8px;border:'+(isLife?'2px solid var(--accent)':'none')+'">';
     out+='<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
     out+='<span style="font-size:10px;font-weight:700;color:'+(isLife?'var(--accent)':'var(--sub)')+'">'+palaceEmoji[pname]+' '+pname+'</span>';
