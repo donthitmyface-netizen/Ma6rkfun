@@ -1,4 +1,4 @@
-<!-- v20260319d -->
+<!-- v20260319e -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -581,17 +581,25 @@ function setFont(scale){
   });
 }
 function applyFont(){
-  // Scale entire page using zoom, but clip overflow so nothing spills right
-  if(fontScale===1){
-    document.body.style.zoom='';
-    document.body.style.width='';
-    document.documentElement.style.overflowX='';
-  } else {
-    // Shrink logical width so zoomed content still fits the physical screen
-    document.body.style.zoom = fontScale;
-    document.body.style.width = Math.round(100/fontScale)+'%';
-    document.documentElement.style.overflowX='hidden';
+  var el=document.documentElement;
+  // Remove all previous scaling
+  el.style.transform='';
+  el.style.transformOrigin='';
+  el.style.width='';
+  el.style.height='';
+  document.body.style.zoom='';
+  document.body.style.width='';
+
+  if(fontScale!==1){
+    // Scale from top-left; shrink the root element width/height inversely
+    // so the viewport doesn't scroll horizontally
+    var pct=Math.round(100/fontScale)+'%';
+    el.style.transformOrigin='top left';
+    el.style.transform='scale('+fontScale+')';
+    el.style.width=pct;
+    el.style.height=pct;
   }
+
   document.querySelectorAll('.font-btn').forEach(function(b){
     b.classList.toggle('active', parseFloat(b.dataset.scale)===fontScale);
   });
