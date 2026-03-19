@@ -13,23 +13,37 @@
 <meta name="apple-mobile-web-app-title" content="常中天機"/>
 <meta name="theme-color" content="#0a0a0f"/>
 <title>常中天機</title>
-<style>
+<style>/* styles.css — 常中天機 · 暗黑玄數賽博風格 */
+
 /* ═══ 常中天機 · 暗黑玄數 v3 ═══ */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 
 :root{
-  --bg:#07070f; --card:#0d0d1c; --card2:#111128;
-  --border:#1c1840; --border2:#2a1a4f;
-  --text:#ddd6ff; --sub:#8878c8; --dim:#3a2f60;
-  --accent:#ff2e63; --accent2:#ff7090;
-  --accent-bg:rgba(255,46,99,.07);
-  --track:#14102a; --row:#0a0a18;
-  --input:#0d0d1c; --iborder:#2a1a4f;
-  --tab:#0d0d1c; --header1:#06060e; --header2:#0f0820;
-  --gold:#c9a84c; --gold2:#f0d080;
-  --indigo:#1a1040; --indigo2:#9b8cd6;
+  /* 術 — Bright Cyber: white base, strong neon, maximum contrast */
+  --bg:#f0f0f8;
+  --card:#ffffff;
+  --card2:#f8f8ff;
+  --border:#d0c8e8;
+  --border2:#b8a8e0;
+  --text:#0a0818;
+  --sub:#3a2880;
+  --dim:#8070b0;
+  --accent:#ff0040;
+  --accent2:#ff3366;
+  --accent-bg:rgba(255,0,64,.08);
+  --track:#e0d8f0;
+  --row:#f4f2fc;
+  --input:#ffffff;
+  --iborder:#c0b0e0;
+  --tab:#ffffff;
+  --header1:#0a0818;
+  --header2:#1a0830;
+  --gold:#b8860b;
+  --gold2:#d4a000;
+  --indigo:#ede8ff;
+  --indigo2:#5533cc;
 }
 
 ::-webkit-scrollbar{width:3px;height:3px;}
@@ -59,11 +73,11 @@ button,input,select{font-family:inherit;}
 
 /* ── Header ── */
 #header{
-  background:linear-gradient(160deg,#06060e 0%,#0f0820 55%,#080510 100%);
+  background:linear-gradient(160deg,var(--header1) 0%,var(--header2) 55%,var(--header1) 100%);
   padding:12px 14px; display:flex; align-items:center; gap:10px;
   position:sticky; top:0; z-index:200;
-  border-bottom:1px solid rgba(255,46,99,.2);
-  box-shadow:0 0 40px rgba(255,46,99,.1),0 0 1px rgba(255,46,99,.25),0 4px 20px rgba(0,0,0,.9);
+  border-bottom:1px solid rgba(255,46,99,.3);
+  box-shadow:0 0 40px rgba(255,46,99,.12),0 0 1px rgba(255,46,99,.3),0 4px 20px rgba(0,0,0,.8);
 }
 #header::before{
   content:''; position:absolute; inset:0; pointer-events:none;
@@ -326,20 +340,145 @@ input:focus{border-color:var(--accent);box-shadow:0 0 10px rgba(255,46,99,.2);}
 }
 .donate-btn:hover{border-color:var(--accent);box-shadow:0 0 14px rgba(255,46,99,.2);}
 
+
+/* ── 術 theme overrides (bright cyber, default :root is now bright) ── */
+/* Cards get subtle shadow instead of glow */
+:root .card,
+body:not(.dark):not(.pastel) .card{
+  box-shadow:0 2px 12px rgba(0,0,0,.12),0 0 0 1px rgba(255,0,64,.06);
+}
+:root .card.accent-top,
+body:not(.dark):not(.pastel) .card.accent-top{
+  box-shadow:0 2px 12px rgba(0,0,0,.1),0 0 14px rgba(255,0,64,.15);
+}
+/* Header text strong neon on bright bg */
+body:not(.dark):not(.pastel) #header .title h1{
+  color:#ffffff;
+  text-shadow:0 0 8px rgba(255,0,64,1),0 0 20px rgba(255,0,64,.7),0 0 40px rgba(255,0,64,.4);
+}
+/* Tab bar on bright theme */
+body:not(.dark):not(.pastel) #tabs{
+  background:#ffffff;
+  border-bottom:2px solid #e0d8f0;
+}
+body:not(.dark):not(.pastel) .tab-btn{
+  color:#8070b0;
+}
+body:not(.dark):not(.pastel) .tab-btn.active{
+  color:#ff0040;
+  border-bottom-color:#ff0040;
+  text-shadow:0 0 8px rgba(255,0,64,.5);
+}
+/* Lucky bar on bright */
+body:not(.dark):not(.pastel) #lucky-bar{
+  background:rgba(255,0,64,.04);
+  border-bottom-color:rgba(255,0,64,.15);
+}
+/* Countdown neon on bright */
+body:not(.dark):not(.pastel) #countdown{
+  text-shadow:0 0 16px rgba(255,0,64,.8),0 0 32px rgba(255,0,64,.4);
+}
+/* Input on bright */
+body:not(.dark):not(.pastel) input[type=text],
+body:not(.dark):not(.pastel) input[type=password],
+body:not(.dark):not(.pastel) input[type=date],
+body:not(.dark):not(.pastel) input[type=time],
+body:not(.dark):not(.pastel) input[type=number]{
+  border-color:#c0b0e0;
+  background:#fff;
+  color:#0a0818;
+}
+
+/* ── 古 (pastel/sunlight) theme extra overrides ── */
+body.pastel #header{
+  background:linear-gradient(160deg,#000000 0%,#1a0010 55%,#000000 100%);
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+body.pastel #header::before,
+body.pastel #header::after{ display:none; }
+body.pastel #header .title h1{
+  color:#ffffff;
+  text-shadow:none;
+  animation:none;
+}
+body.pastel #header .title p{ color:rgba(255,255,255,.7); }
+body.pastel .header-icon{
+  border-color:#ffffff;
+  color:#ffffff;
+  box-shadow:none;
+}
+body.pastel .theme-btn{ border-color:#bbbbbb; color:#333333; background:#f0f0f0; }
+body.pastel .theme-btn.active,
+body.pastel .theme-btn:hover{ border-color:#cc0033; color:#cc0033; box-shadow:none; }
+body.pastel #tabs{ background:#ffffff; border-bottom:2px solid #cccccc; }
+body.pastel .tab-btn{ color:#666666; font-weight:800; }
+body.pastel .tab-btn.active{ color:#cc0033; border-bottom-color:#cc0033; text-shadow:none; }
+body.pastel #lucky-bar{ background:#f5f5f5; border-bottom:1px solid #cccccc; }
+body.pastel #lucky-bar span{ color:#cc0033; }
+body.pastel #lucky-fill{ background:#cc0033; animation:none; box-shadow:none; }
+body.pastel #lucky-pct{ color:#cc0033; }
+body.pastel #lucky-msg{ color:#333333; }
+body.pastel .card{
+  background:#ffffff;
+  border:1.5px solid #cccccc;
+  box-shadow:0 1px 6px rgba(0,0,0,.1);
+}
+body.pastel .card.accent-top{ border-top:3px solid #cc0033; box-shadow:0 1px 6px rgba(0,0,0,.1); }
+body.pastel .card.accent-top::before{ background:none; }
+body.pastel .card::before{ background:none; }
+body.pastel .btn-primary{ background:#cc0033; box-shadow:none; }
+body.pastel .pill.active{ background:#cc0033; box-shadow:none; }
+body.pastel .w-tab.active{ background:#cc0033; box-shadow:none; }
+body.pastel .tab-btn.active{ text-shadow:none; }
+body.pastel #countdown{ color:#cc0033; text-shadow:none; }
+body.pastel input[type=text],
+body.pastel input[type=password],
+body.pastel input[type=date],
+body.pastel input[type=time],
+body.pastel input[type=number]{
+  border:1.5px solid #aaaaaa;
+  background:#ffffff;
+  color:#000000;
+}
+body.pastel input:focus{ border-color:#cc0033; box-shadow:none; }
+/* Ball colours in sunlight mode — strong contrast */
+body.pastel .heat-cell:hover{ border-color:#cc0033; }
+
 /* ── Dark theme ── */
 body.dark{
-  --bg:#030306;--card:#07070f;--border:#141030;--text:#e8e0ff;
-  --sub:#7060b8;--dim:#2a2050;--accent:#ff2e63;--accent-bg:rgba(255,46,99,.1);
+  --bg:#030306;--card:#07070f;--card2:#0c0c18;--border:#141030;--text:#e8e0ff;
+  --sub:#7060b8;--dim:#2a2050;--accent:#ff2e63;--accent2:#ff6090;
+  --accent-bg:rgba(255,46,99,.1);
   --track:#0e0920;--row:#050510;--input:#07070f;--iborder:#1a1435;
-  --header1:#030306;--header2:#080415;
+  --tab:#07070f;--header1:#030306;--header2:#080415;
+  --gold:#c9a84c;--gold2:#f0d080;--indigo:#0a0520;--indigo2:#9b8cd6;
 }
 
 /* ── Pastel theme ── */
 body.pastel{
-  --bg:#f4f0ff;--card:#fff;--border:#ddd4f8;--text:#2a1a4f;--sub:#6050a0;
-  --dim:#b0a0d0;--accent:#cc2255;--accent-bg:#fce4f0;
-  --track:#ede0ff;--row:#f8f4ff;--input:#fff;--iborder:#d4c8f0;
-  --header1:#2a1a4f;--header2:#4a2a7f;
+  /* 古 — Sunlight Mode: maximum readability outdoors */
+  --bg:#ffffff;
+  --card:#ffffff;
+  --card2:#f5f5f5;
+  --border:#cccccc;
+  --border2:#aaaaaa;
+  --text:#000000;
+  --sub:#333333;
+  --dim:#666666;
+  --accent:#cc0033;
+  --accent2:#ee1144;
+  --accent-bg:rgba(204,0,51,.07);
+  --track:#dddddd;
+  --row:#f8f8f8;
+  --input:#ffffff;
+  --iborder:#aaaaaa;
+  --tab:#ffffff;
+  --header1:#000000;
+  --header2:#1a0010;
+  --gold:#8b6914;
+  --gold2:#a07800;
+  --indigo:#f0f0f0;
+  --indigo2:#222222;
 }
 body.pastel #header::before,body.pastel #header::after{display:none;}
 body.pastel #lucky-fill{
