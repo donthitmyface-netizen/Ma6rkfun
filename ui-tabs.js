@@ -196,7 +196,7 @@ function renderFortune(){
  var bdate=new Date(userProfile.date);
  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
  var today=new Date();
- var scoreColor=f.score>=80?'#22cc66':f.score>=60?'var(--gold)':'#ff4444';
+ var scoreColor=f.score>=80?'var(--accent)':f.score>=60?'var(--gold)':'#cc0000';
 
  // ══ 1. 今日運勢總覽 ══
  out+='<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
@@ -214,7 +214,7 @@ function renderFortune(){
  {k:'健康',e:'',s:Math.min(99,Math.max(30,f.score+Math.round(Math.cos(bd*0.6)*6)))}
  ];
  subScores.forEach(function(ss){
- var c2=ss.s>=75?'#22cc66':ss.s>=55?'var(--gold)':'#ff4444';
+ var c2=ss.s>=75?'var(--accent)':ss.s>=55?'var(--gold)':'#cc0000';
  out+='<div style="background:var(--row);border-radius:10px;padding:8px"><div style="font-size:14px">'+ss.e+'</div><div style="font-size:10px;color:var(--sub);margin:2px 0">'+ss.k+'</div><div style="font-size:13px;font-weight:900;color:'+c2+'">'+ss.s+'</div></div>';
  });
  out+='</div></div>';
@@ -436,7 +436,7 @@ function renderFortune(){
  ];
  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
  sajuA.forEach(function(a){
- var c=a.s>=75?'#22cc66':a.s>=55?'var(--gold)':'#ff4444';
+ var c=a.s>=75?'var(--accent)':a.s>=55?'var(--gold)':'#cc0000';
  out+='<div style="background:var(--row);border-radius:10px;padding:10px">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
  out+='<span style="font-size:11px">'+a.e+' <b>'+a.l+'</b></span><span style="font-size:14px;font-weight:900;color:'+c+'">'+a.s+'</span></div>';
@@ -449,7 +449,7 @@ function renderFortune(){
  var lucky7=calcLucky7Days();
  if(lucky7&&lucky7.length>0){
  var curMood=parseInt(localStorage.getItem('ms_mood')||'70');
- var moodColor=curMood>=75?'#22cc66':curMood>=55?'var(--gold)':'#ff4444';
+ var moodColor=curMood>=75?'var(--accent)':curMood>=55?'var(--gold)':'#cc0000';
  out+='<div class="card" style="margin-bottom:10px">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
  out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">未來七日吉日推算</div>';
@@ -458,7 +458,7 @@ function renderFortune(){
  out+='<div style="font-size:9px;color:var(--dim)">人和分</div></div></div>';
  var medals7=['[一]','[二]','[三]'];
  lucky7.slice(0,3).forEach(function(day,i){
- var sc=day.total,scC=sc>=80?'#22cc66':sc>=60?'var(--gold)':'#ff4444';
+ var sc=day.total,scC=sc>=80?'var(--accent)':sc>=60?'var(--gold)':'#cc0000';
  out+='<div style="background:'+(i===0?'var(--accent-bg)':'var(--row)')+';border-radius:12px;padding:12px;margin-bottom:8px;border:'+(i===0?'1.5px solid var(--accent)':'none')+'">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
  out+='<div style="font-size:14px;font-weight:900">'+medals7[i]+' '+day.dateStr+' <span style="font-size:11px;color:var(--sub)">'+day.ganzhi+'</span></div>';
@@ -749,7 +749,7 @@ function renderChecker(){
  out+=grid49(picked,'togglePick',picked.length>=6);
  out+='<div style="display:flex;gap:9px"><button class="btn btn-primary" style="flex:1" onclick="doCheck()">對獎！</button><button class="btn btn-ghost" onclick="picked=[];checkResult=null;render()">清除</button></div></div>';
  if(checkResult){
- out+='<div class="card" style="text-align:center;background:'+(checkResult.win?'#e8f5e9':'var(--card)')+'"><div style="font-size:26px;font-weight:900;color:'+(checkResult.win?'#22cc66':'var(--sub)')+';margin-bottom:6px">'+checkResult.prize+'</div>';
+ out+='<div class="card" style="text-align:center;background:'+(checkResult.win?'#e8f5e9':'var(--card)')+'"><div style="font-size:26px;font-weight:900;color:'+(checkResult.win?'var(--accent)':'var(--sub)')+';margin-bottom:6px">'+checkResult.prize+'</div>';
  out+='<div style="font-size:12px;color:var(--sub);margin-bottom:10px">命中 '+checkResult.matched.length+' 個正碼'+(checkResult.xHit?' + 特別號 ':'')+'</div>';
  if(checkResult.matched.length>0||checkResult.xHit){out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">';for(var i=0;i<checkResult.matched.length;i++) out+=ball(checkResult.matched[i],38);if(checkResult.xHit) out+=ball(l.extra,38,true);out+='</div>';}
  out+='</div>';
@@ -801,7 +801,7 @@ function renderMyBets(){
  out+='<div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
  out+='<div><span style="font-size:12px;color:var(--accent);font-weight:800">'+b.draw+'</span><span style="font-size:10px;color:var(--dim);margin-left:8px">'+b.date+'</span></div>';
  out+='<div style="display:flex;gap:6px;align-items:center">';
- if(hDraw) out+='<span style="font-size:11px;font-weight:800;color:'+(won?'#22cc66':'#ff4444')+';background:'+(won?'#e8f5e9':'#ffebee')+';padding:2px 8px;border-radius:20px">'+pn+'</span>';
+ if(hDraw) out+='<span style="font-size:11px;font-weight:800;color:'+(won?'var(--accent)':'#cc0000')+';background:'+(won?'#e8f5e9':'#ffebee')+';padding:2px 8px;border-radius:20px">'+pn+'</span>';
  else out+='<span style="font-size:10px;color:var(--dim)">⏳ 待開獎</span>';
  out+='<button onclick="deleteBet('+b.id+')" style="border:none;background:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0"></button></div></div>';
  out+='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
@@ -917,12 +917,12 @@ function renderAIPredict(){
  for(var i=0;i<bmodes.length;i++) out+='<button class="pill '+(betMode===bmodes[i][0]?'active':'')+'" onclick="betMode=\''+bmodes[i][0]+'\';if(betMode!==\'standard\'&&pCount<7)pCount=7;render()" style="'+(betMode===bmodes[i][0]?'border-color:#6a1b9a;background:#f3e5f5;color:#6a1b9a':'')+'">'+bmodes[i][1]+'</button>';
  out+='</div>';
  if(betMode!=='standard'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';for(var n=7;n<=12;n++) out+='<button onclick="pCount='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(pCount===n?'#6a1b9a':'var(--border)')+';background:'+(pCount===n?'#f3e5f5':'var(--card)')+';color:'+(pCount===n?'#6a1b9a':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
- if(betMode==='bravery'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';for(var n=1;n<=Math.min(5,pCount-1);n++) out+='<button onclick="sureCt='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(sureCt===n?'#22cc66':'var(--border)')+';background:'+(sureCt===n?'#e8f5e9':'var(--card)')+';color:'+(sureCt===n?'#22cc66':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
+ if(betMode==='bravery'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';for(var n=1;n<=Math.min(5,pCount-1);n++) out+='<button onclick="sureCt='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(sureCt===n?'var(--accent)':'var(--border)')+';background:'+(sureCt===n?'#e8f5e9':'var(--card)')+';color:'+(sureCt===n?'var(--accent)':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
  out+='<div style="background:var(--row);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--sub)">'+(betMode==='standard'?'普通一注':betMode==='combination'?'C('+pCount+',6)='+comb(pCount,6)+'注':'膽'+sureCt+'拖'+dc)+'</div><div style="text-align:right"><div style="font-size:18px;font-weight:900;color:var(--gold2)">HK$'+(tickets*10).toLocaleString()+'</div><div style="font-size:9px;color:var(--dim)">'+tickets+'注×$10</div></div></div>';
  out+='<button class="btn btn-purple btn-full" onclick="doAI()" '+(pLoading?'disabled':'')+'>'+(pLoading?' AI 分析中...':' 生成號碼建議')+'</button></div>';
  if(aiResult){
  if(aiResult.error) out+='<div class="card" style="text-align:center"><span style="color:#c62828;font-weight:700">生成失敗，請重試</span></div>';
- else if(aiResult.type==='bravery'){out+='<div class="result-card"><div style="margin-bottom:12px"><div style="font-size:11px;color:#2e7d32;font-weight:800;margin-bottom:6px">膽碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.sure.length;i++) out+=ball(aiResult.sure[i],46,false,false,true,'#22cc66');out+='</div></div><div style="margin-bottom:12px"><div style="font-size:11px;color:var(--gold2);font-weight:800;margin-bottom:6px">拖碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.drag.length;i++) out+=ball(aiResult.drag[i],46,false,false,true,'var(--gold2)');out+='</div></div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
+ else if(aiResult.type==='bravery'){out+='<div class="result-card"><div style="margin-bottom:12px"><div style="font-size:11px;color:#2e7d32;font-weight:800;margin-bottom:6px">膽碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.sure.length;i++) out+=ball(aiResult.sure[i],46,false,false,true,'var(--accent)');out+='</div></div><div style="margin-bottom:12px"><div style="font-size:11px;color:var(--gold2);font-weight:800;margin-bottom:6px">拖碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.drag.length;i++) out+=ball(aiResult.drag[i],46,false,false,true,'var(--gold2)');out+='</div></div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
  else{out+='<div class="result-card"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">'+ballsRow(aiResult.numbers,aiResult.extra,48)+'</div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
  }
  return out;

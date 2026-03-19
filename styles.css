@@ -552,3 +552,88 @@ body.pastel #lucky-fill{
 }
 body.pastel .card.accent-top{border-top-color:rgba(204,34,85,.4);}
 body.pastel .card.accent-top::before{background:linear-gradient(90deg,transparent,rgba(204,34,85,.5),transparent);}
+
+/* ── Font scale via CSS (applied to html element) ── */
+html.font-lg  { font-size: 20px; }
+html.font-xl  { font-size: 25px; }
+
+/* When zoomed, ALL px-based elements need to scale.
+   Use zoom on body — but exempt sticky/fixed elements */
+html.font-lg  body { zoom: 1.25; }
+html.font-xl  body { zoom: 1.5;  }
+
+/* Restore fixed/sticky elements to their natural size */
+html.font-lg  #header,
+html.font-lg  #tabs,
+html.font-lg  #lucky-bar,
+html.font-lg  #fab {
+  zoom: calc(1 / 1.25);
+}
+html.font-xl  #header,
+html.font-xl  #tabs,
+html.font-xl  #lucky-bar,
+html.font-xl  #fab {
+  zoom: calc(1 / 1.5);
+}
+
+/* Heatmap grid — ensure cells stay square under zoom */
+html.font-lg  .heat-grid,
+html.font-xl  .heat-grid {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+html.font-lg  .heat-cell,
+html.font-xl  .heat-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+/* Chips/pills — allow wrap but keep min-width */
+html.font-lg  .chips,
+html.font-xl  .chips {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+html.font-lg  .pill,
+html.font-xl  .pill {
+  flex-shrink: 0;
+}
+
+/* ── 術 theme: force all card backgrounds to white ── */
+body:not(.dark):not(.pastel) .card {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+body:not(.dark):not(.pastel) .card > div[style*="background"] {
+  background: var(--row) !important;
+}
+
+/* Force text colors in bright mode */
+body:not(.dark):not(.pastel) [style*="color:#ddd"],
+body:not(.dark):not(.pastel) [style*="color:#eee"],
+body:not(.dark):not(.pastel) [style*="color:#ccc"],
+body:not(.dark):not(.pastel) [style*="color:rgba(255,255,255"] {
+  color: var(--sub) !important;
+}
+
+/* 古 mode: force ALL backgrounds white */
+body.pastel [style*="background:#"] {
+  background: var(--card) !important;
+}
+body.pastel [style*="background:linear-gradient"] {
+  background: var(--card) !important;
+}
+body.pastel [style*="background:rgba(0,0,"] {
+  background: var(--row) !important;
+}
+
+/* 古 mode: force text to black */  
+body.pastel [style*="color:#ddd"],
+body.pastel [style*="color:#eee"],
+body.pastel [style*="color:rgba(255,255,255"],
+body.pastel [style*="color:var(--sub)"] {
+  color: var(--text) !important;
+}
+body.pastel [style*="color:var(--dim)"] {
+  color: var(--sub) !important;
+}

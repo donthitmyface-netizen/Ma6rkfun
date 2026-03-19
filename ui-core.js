@@ -94,17 +94,17 @@ function render(){
 function renderLatest(){
  var l=hist[0],nd=calcNextDraw();
  var out='';
- out+='<div class="card accent-top" style="text-align:center;background:linear-gradient(160deg,#080818,#0e0828,#080818);border-color:rgba(255,46,99,.4);">';
+ out+='<div class="card accent-top" style="text-align:center;background:var(--card);border:1px solid var(--accent);">';
   out+='<div style="font-size:9px;color:var(--dim);letter-spacing:3px;margin-bottom:6px">第 '+l.draw+' 期　'+l.date+'</div>';
   out+='<div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:4px;margin-bottom:14px;text-shadow:0 0 14px rgba(255,46,99,.8)">本期開獎六正一特</div>';
-  out+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px 10px;background:rgba(0,0,0,.45);border-radius:12px;border:1px solid rgba(255,46,99,.15);margin-bottom:8px">';
+  out+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px 10px;background:var(--row);border-radius:12px;border:1px solid var(--accent-bg);margin-bottom:8px">';
   out+=ballsRow(l.numbers,l.extra,52);
   out+='</div>';
   out+='<div style="font-size:9px;color:var(--dim);letter-spacing:2px">六　正　碼　　＋　　特　別　號</div>';
   out+='</div>';
  out+='</div>';
 
- out+='<div class="card" style="background:linear-gradient(135deg,#0a0818,#0d0a22)">';
+ out+='<div class="card" style="background:var(--card)">';
  out+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
  out+='<div><div style="font-size:12px;color:var(--gold);font-weight:800">⏳ 下期 '+nd.drawNum+'</div>';
  out+='<div style="font-size:11px;color:var(--sub)">'+nd.date+' · 晚上 9:30</div></div>';
@@ -116,13 +116,13 @@ function renderLatest(){
 
  // Auto-refresh status indicator
  if(refreshLog.length>0){
- var logColor=refreshLog[0].startsWith('')?'#22cc66':refreshLog[0].startsWith('')?'#ff4444':'var(--sub)';
+ var logColor=refreshLog[0].startsWith('')?'var(--accent)':refreshLog[0].startsWith('')?'#cc0000':'var(--sub)';
  out+='<div style="font-size:10px;color:'+logColor+';text-align:center;margin-bottom:6px">'+refreshLog[0]+'</div>';
  }
  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:10px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in </span></div>';
 
  // 打賞區
- out+='<div style="background:linear-gradient(135deg,#0c0820,#100c28);border:1px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
+ out+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
  out+='<div style="font-size:13px;font-weight:900;color:var(--gold2);margin-bottom:4px">☕ 支持開發者</div>';
  out+='<div style="font-size:10px;color:var(--sub);margin-bottom:10px">本應用程式完全免費，如認為有用，歡迎支持開發者持續維護。</div>';
  out+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
@@ -155,7 +155,7 @@ function renderLatest(){
 var W_METHODS=[
  {key:'golden',label:'黃金分割 φ',emoji:'',desc:'數學美感選號',color:'var(--gold)'},
  {key:'fib',label:'費氏數列 ∞',emoji:'',desc:'自然界神奇序列',color:'var(--sub)'},
- {key:'gap',label:'遺漏回歸 ↩',emoji:'',desc:'久未出現的號碼',color:'#22cc66'},
+ {key:'gap',label:'遺漏回歸 ↩',emoji:'',desc:'久未出現的號碼',color:'var(--accent)'},
  {key:'hot',label:'近期熱號 ',emoji:'',desc:'最近12期高頻',color:'#e53935'},
  {key:'cold',label:'久違冷號 ',emoji:'',desc:'很久沒出現的',color:'#1e88e5'},
 ];

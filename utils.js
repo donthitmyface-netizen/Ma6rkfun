@@ -221,32 +221,24 @@ function setFont(scale){
  });
 }
 function applyFont(){
-  // Strategy: zoom only #content (the scrollable area).
-  // header / #tabs / #lucky-bar / FAB are position:sticky or fixed —
-  // they must stay outside the zoom so they don't jump or overlap.
-  var content = document.getElementById('content');
-
-  // Always reset body/html transforms from any old approach
-  document.documentElement.style.transform = '';
-  document.documentElement.style.width     = '';
-  document.documentElement.style.height    = '';
+  // Use CSS classes on <html> — the CSS handles zoom + counter-zoom
+  // for sticky/fixed elements (header, tabs, lucky-bar, fab)
+  var el = document.documentElement;
+  // Reset any old inline zoom
   document.body.style.zoom  = '';
   document.body.style.width = '';
+  el.style.transform = '';
+  el.style.width     = '';
+  el.style.height    = '';
+  var content = document.getElementById('content');
+  if(content){ content.style.zoom = ''; content.style.width = ''; }
 
-  if(content){
-    if(fontScale === 1){
-      content.style.zoom            = '';
-      content.style.width           = '';
-      content.style.transformOrigin = '';
-    } else {
-      // zoom enlarges the element; shrink its logical width so it still
-      // fits the physical viewport (e.g. zoom:1.5 → width:66.7%)
-      content.style.zoom            = fontScale;
-      content.style.width           = Math.round(100 / fontScale) + '%';
-      content.style.transformOrigin = 'top left';
-    }
-  }
+  // Apply zoom via CSS class
+  el.classList.remove('font-lg','font-xl');
+  if(fontScale === 1.2) el.classList.add('font-lg');
+  else if(fontScale >= 1.5) el.classList.add('font-xl');
 
+  // Update button active state
   document.querySelectorAll('.font-btn').forEach(function(b){
     b.classList.toggle('active', parseFloat(b.dataset.scale) === fontScale);
   });

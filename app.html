@@ -1,19 +1,18 @@
-<!-- v20260319z2 -->
+<!-- v20260319z4 -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8"/>
- <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
-
-
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="常中天機"/>
-<meta name="theme-color" content="#0a0a0f"/>
-<title>常中天機</title>
-<style>/* styles.css — 常中天機 · 暗黑玄數賽博風格 */
+  <meta charset="UTF-8"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="常中天機"/>
+  <meta name="theme-color" content="#0a0818"/>
+  <title>常中天機</title>
+  <style>
+/* styles.css — 常中天機 · 暗黑玄數賽博風格 */
 
 /* ═══ 常中天機 · 暗黑玄數 v3 ═══ */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
@@ -567,95 +566,201 @@ body.pastel #lucky-fill{
 }
 body.pastel .card.accent-top{border-top-color:rgba(204,34,85,.4);}
 body.pastel .card.accent-top::before{background:linear-gradient(90deg,transparent,rgba(204,34,85,.5),transparent);}
-</style>
- <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
+
+/* ── Font scale via CSS (applied to html element) ── */
+html.font-lg  { font-size: 20px; }
+html.font-xl  { font-size: 25px; }
+
+/* When zoomed, ALL px-based elements need to scale.
+   Use zoom on body — but exempt sticky/fixed elements */
+html.font-lg  body { zoom: 1.25; }
+html.font-xl  body { zoom: 1.5;  }
+
+/* Restore fixed/sticky elements to their natural size */
+html.font-lg  #header,
+html.font-lg  #tabs,
+html.font-lg  #lucky-bar,
+html.font-lg  #fab {
+  zoom: calc(1 / 1.25);
+}
+html.font-xl  #header,
+html.font-xl  #tabs,
+html.font-xl  #lucky-bar,
+html.font-xl  #fab {
+  zoom: calc(1 / 1.5);
+}
+
+/* Heatmap grid — ensure cells stay square under zoom */
+html.font-lg  .heat-grid,
+html.font-xl  .heat-grid {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+html.font-lg  .heat-cell,
+html.font-xl  .heat-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+/* Chips/pills — allow wrap but keep min-width */
+html.font-lg  .chips,
+html.font-xl  .chips {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+html.font-lg  .pill,
+html.font-xl  .pill {
+  flex-shrink: 0;
+}
+
+/* ── 術 theme: force all card backgrounds to white ── */
+body:not(.dark):not(.pastel) .card {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+body:not(.dark):not(.pastel) .card > div[style*="background"] {
+  background: var(--row) !important;
+}
+
+/* Force text colors in bright mode */
+body:not(.dark):not(.pastel) [style*="color:#ddd"],
+body:not(.dark):not(.pastel) [style*="color:#eee"],
+body:not(.dark):not(.pastel) [style*="color:#ccc"],
+body:not(.dark):not(.pastel) [style*="color:rgba(255,255,255"] {
+  color: var(--sub) !important;
+}
+
+/* 古 mode: force ALL backgrounds white */
+body.pastel [style*="background:#"] {
+  background: var(--card) !important;
+}
+body.pastel [style*="background:linear-gradient"] {
+  background: var(--card) !important;
+}
+body.pastel [style*="background:rgba(0,0,"] {
+  background: var(--row) !important;
+}
+
+/* 古 mode: force text to black */  
+body.pastel [style*="color:#ddd"],
+body.pastel [style*="color:#eee"],
+body.pastel [style*="color:rgba(255,255,255"],
+body.pastel [style*="color:var(--sub)"] {
+  color: var(--text) !important;
+}
+body.pastel [style*="color:var(--dim)"] {
+  color: var(--sub) !important;
+}
+
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
 </head>
 <body>
 
-<!-- Toast -->
-<div id="toast"></div>
-
-<!-- Confetti -->
+<div id="toast" class="toast-msg" style="display:none"></div>
 <div id="confetti"></div>
 
 <!-- Settings Modal -->
-<div id="settings-modal">
- <div class="modal-box">
- <div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px">API 金鑰配置</div>
- <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.9">選擇 AI 提供商並填入 API Key 啟用 AI 預測功能。</div>
- <div style="display:flex;gap:6px;margin-bottom:12px" id="ai-provider-tabs">
- <button onclick="setAIProvider('anthropic')" id="prov-anthropic" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer">Claude</button>
- <button onclick="setAIProvider('deepseek')" id="prov-deepseek" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">DeepSeek</button>
- <button onclick="setAIProvider('grok')" id="prov-grok" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">Grok</button>
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">
+  <div class="modal-box">
+    <div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px">API 金鑰配置</div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.9">選擇 AI 提供商並填入 API Key 啟用 AI 預測功能。</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px" id="ai-provider-tabs">
+      <button onclick="setAIProvider('anthropic')" id="prov-anthropic" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer">Claude</button>
+      <button onclick="setAIProvider('deepseek')"  id="prov-deepseek"  style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">DeepSeek</button>
+      <button onclick="setAIProvider('grok')"      id="prov-grok"      style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--text);cursor:pointer">Grok</button>
+    </div>
+    <div id="ai-provider-hint" style="font-size:10px;color:var(--sub);margin-bottom:8px">console.anthropic.com · 每次約HK$0.01</div>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="margin-bottom:16px"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">命盤資料</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px">修改出生資料，更新命盤分析</div>
+      <button class="btn btn-primary" onclick="closeSettings();editProfile();" style="width:100%">修改出生資料</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Onboarding / Birthday Modal ══ -->
+<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
+ <div style="background:var(--card);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto">
+ <div style="text-align:center;margin-bottom:16px">
+ <div style="font-size:36px"></div>
+ <div style="font-size:20px;font-weight:900;color:var(--accent)">歡迎使用六合常中</div>
+ <div style="font-size:12px;color:var(--sub);margin-top:4px">輸入生日，獲取個人化運程分析</div>
  </div>
- <div id="ai-provider-hint" style="font-size:10px;color:var(--sub);margin-bottom:8px">console.anthropic.com · 每次約HK$0.01</div>
- <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="margin-bottom:16px"/>
+ <div style="margin-bottom:12px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">出生日期</div>
+ <input type="date" id="ob-date" style="width:100%;box-sizing:border-box"/>
+ </div>
+ <div style="margin-bottom:12px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⏰ 出生時間（可選，更準確）</div>
+ <input type="time" id="ob-time" placeholder="不知道可留空" style="width:100%;box-sizing:border-box"/>
+ </div>
+ <div style="margin-bottom:16px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚧ 性別（影響紫微斗數）</div>
  <div style="display:flex;gap:8px">
- <button class="btn btn-primary" style="flex:1" onclick="saveApiKey()">儲存</button>
- <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
+ <button id="ob-male" onclick="selectGender('male')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">男</button>
+ <button id="ob-female" onclick="selectGender('female')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">女</button>
  </div>
- <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
- <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">命盤資料</div>
- <div style="font-size:11px;color:var(--sub);margin-bottom:8px">修改出生資料，更新命盤分析</div>
- <button class="btn btn-primary" onclick="closeSettings();editProfile();" style="width:100%">修改出生資料</button>
  </div>
+ <button onclick="saveProfile()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#ff6090);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:8px">開始使用</button>
+ <button onclick="skipProfile()" style="width:100%;padding:10px;background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer">跳過（之後可在設定修改）</button>
  </div>
 </div>
 
-<!-- Header -->
+<div id="mood-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99998;align-items:center;justify-content:center;padding:16px"></div>
+
 <div id="header">
- <div class="header-icon float">六合</div>
- <div class="title">
- <h1>常中天機</h1>
- <p>紫微垣下，四十九道幽光 <span style="opacity:0.4;font-size:8px">v319x</span></p>
- </div>
- <div class="theme-btns">
- <button class="theme-btn active" id="btn-fun" onclick="setTheme('fun')" title="標準">術</button>
- <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" title="夜間">暗</button>
- <button class="theme-btn" id="btn-pastel" onclick="setTheme('pastel')" title="古典">古</button>
- <button class="font-btn theme-btn" data-scale="1" onclick="setFont(1)" title="標準字體" style="font-size:10px;font-weight:700;letter-spacing:-0.5px">A</button>
- <button class="font-btn theme-btn" data-scale="1.2" onclick="setFont(1.2)" title="大字體" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">A+</button>
- <button class="font-btn theme-btn" data-scale="1.5" onclick="setFont(1.5)" title="超大字體" style="font-size:12px;font-weight:700;letter-spacing:-0.5px">A++</button>
- </div>
- <div id="draw-info">
- <div class="draw" id="hdr-draw">--/---</div>
- <div class="date" id="hdr-date">----</div>
- </div>
+  <div class="header-icon float">六合</div>
+  <div class="title">
+    <h1>常中天機</h1>
+    <p>紫微垣下，四十九道幽光 <span style="opacity:0.4;font-size:8px">v20260319</span></p>
+  </div>
+  <div class="theme-btns">
+    <button class="theme-btn active" id="btn-fun"    onclick="setTheme('fun')"    title="術">術</button>
+    <button class="theme-btn"        id="btn-dark"   onclick="setTheme('dark')"   title="暗">暗</button>
+    <button class="theme-btn"        id="btn-pastel" onclick="setTheme('pastel')" title="古">古</button>
+    <button class="font-btn theme-btn" data-scale="1"   onclick="setFont(1)"   title="標準" style="font-size:10px;font-weight:700">A</button>
+    <button class="font-btn theme-btn" data-scale="1.2" onclick="setFont(1.2)" title="大字" style="font-size:11px;font-weight:700">A+</button>
+    <button class="font-btn theme-btn" data-scale="1.5" onclick="setFont(1.5)" title="最大" style="font-size:12px;font-weight:700">A++</button>
+  </div>
+  <div id="draw-info">
+    <div class="draw" id="hdr-draw">--/---</div>
+    <div class="date" id="hdr-date">----</div>
+  </div>
 </div>
 
-<!-- Lucky bar -->
 <div id="lucky-bar">
- <span>天機波動值</span>
- <div id="lucky-track"><div id="lucky-fill"></div></div>
- <span id="lucky-pct"></span>
- <span id="lucky-msg"></span>
+  <span>天機波動值</span>
+  <div id="lucky-track"><div id="lucky-fill" style="transition:width 1s ease"></div></div>
+  <span id="lucky-pct"></span>
+  <span id="lucky-msg"></span>
 </div>
 
-<!-- Tabs -->
 <div id="tabs">
- <button class="tab-btn active" data-tab="latest">玄數總覽</button>
- <button class="tab-btn" data-tab="workshop">推演工坊</button>
- <button class="tab-btn" data-tab="heatmap">熱力矩陣</button>
- <button class="tab-btn" data-tab="fortune">命盤推演</button>
- <button class="tab-btn" data-tab="alarm">天機提醒</button>
- <button class="tab-btn" data-tab="history">開獎記錄</button>
- <button class="tab-btn" data-tab="stats">數理統計</button>
- <button class="tab-btn" data-tab="checker">開獎核對</button>
- <button class="tab-btn" data-tab="mybets">個人籤注</button>
- <button class="tab-btn" data-tab="board">排行榜</button>
- <button class="tab-btn" data-tab="predict">數理預測</button>
- <button class="tab-btn" data-tab="discuss">玄數社區</button>
+  <button class="tab-btn active" data-tab="latest">玄數總覽</button>
+  <button class="tab-btn" data-tab="workshop">推演工坊</button>
+  <button class="tab-btn" data-tab="heatmap">熱力矩陣</button>
+  <button class="tab-btn" data-tab="fortune">命盤推演</button>
+  <button class="tab-btn" data-tab="alarm">天機提醒</button>
+  <button class="tab-btn" data-tab="history">開獎記錄</button>
+  <button class="tab-btn" data-tab="stats">數理統計</button>
+  <button class="tab-btn" data-tab="checker">開獎核對</button>
+  <button class="tab-btn" data-tab="mybets">個人籤注</button>
+  <button class="tab-btn" data-tab="board">排行榜</button>
+  <button class="tab-btn" data-tab="predict">數理預測</button>
+  <button class="tab-btn" data-tab="discuss">玄數社區</button>
 </div>
 
-<!-- Content -->
 <div id="content"></div>
 
-<!-- FAB -->
-<button id="fab" onclick="openSettings()">⚙</button>
+<button id="fab" onclick="openSettings()" style="position:fixed;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#cc1840,#ff2e63);color:#fff;border:none;font-size:11px;font-weight:900;cursor:pointer;z-index:300;box-shadow:0 0 18px rgba(255,46,99,.6),0 4px 12px rgba(0,0,0,.5);letter-spacing:-.5px">設定</button>
 
 <script>
-
 // ═══════════════════════════════════════════
 // 六合常中 v10 - Pure Vanilla JS (No React/Babel)
 // Worker URL - change this after Cloudflare setup
@@ -715,41 +820,9 @@ const HISTORY=[
  {draw:"25/115",date:"2025-10-25",numbers:[6,7,27,36,39,43],extra:1},
 ];
 
-
 // ── State ──
-let hist = [...HISTORY];
-try {
-  var _cached = JSON.parse(localStorage.getItem('ms_hist_cache') || 'null');
-  if (_cached && _cached.length > 0 && _cached[0].draw > HISTORY[0].draw) {
-    hist = _cached;
-  }
-} catch(e) {}
-let currentTab = 'latest';
-let theme = localStorage.getItem('ms_theme')||'fun';
-var fontScale=parseFloat(localStorage.getItem('ms_font')||'1');
-let alarmOn = false, alarmMins = 30, alarmFired = false;
-let userProfile = JSON.parse(localStorage.getItem('ms_profile')||'null');
-let prizeOn = false, prizeThr = 1e8, prizeShown = false;
-let curPrize = 8000000;
-let picked = [], checkResult = null;
-let sMode = 'hot';
-let wTab = 'birthday', wBday = '', wMbti = '', wSources = {golden:false,fib:false,gap:false,hot:false,cold:false};
-let wResult = null;
-let myBets = [], boardEntries = [];
-let betInput = [], betNote = '', betDraw = '', betMode = 'standard', pCount = 6, sureCt = 1;
-let pTab = 'math', mMethod = 'combined', mResult = null, aiResult = null;
-let heatMode = 'all';
-let showAddBet = false, showAddBoard = false;
-let boardName = '', boardPicks = [];
-let selPost = null;
-let pLoading = false, mLoading = false, wAiLoading = false;
-let showMathDetail = false;
 
-// Load saved data
-try { myBets = JSON.parse(localStorage.getItem('ms_bets')||'[]'); } catch {}
-try { boardEntries = JSON.parse(localStorage.getItem('ms_board')||'[]'); } catch {}
-
-// ── Utils ──
+// ── Ball zone colour maps (used by ball() and heatmap) ──
 const ZC = {r:'#e53935',b:'#1e88e5',g:'#43a047',o:'#fb8c00',p:'#8e24aa'};
 const ZCL = {r:'#ffcdd2',b:'#bbdefb',g:'#c8e6c9',o:'#ffe0b2',p:'#e1bee7'};
 const ZCD = {r:'#5a0000',b:'#082040',g:'#083008',o:'#5a2000',p:'#200030'};
@@ -970,32 +1043,24 @@ function setFont(scale){
  });
 }
 function applyFont(){
-  // Strategy: zoom only #content (the scrollable area).
-  // header / #tabs / #lucky-bar / FAB are position:sticky or fixed —
-  // they must stay outside the zoom so they don't jump or overlap.
-  var content = document.getElementById('content');
-
-  // Always reset body/html transforms from any old approach
-  document.documentElement.style.transform = '';
-  document.documentElement.style.width     = '';
-  document.documentElement.style.height    = '';
+  // Use CSS classes on <html> — the CSS handles zoom + counter-zoom
+  // for sticky/fixed elements (header, tabs, lucky-bar, fab)
+  var el = document.documentElement;
+  // Reset any old inline zoom
   document.body.style.zoom  = '';
   document.body.style.width = '';
+  el.style.transform = '';
+  el.style.width     = '';
+  el.style.height    = '';
+  var content = document.getElementById('content');
+  if(content){ content.style.zoom = ''; content.style.width = ''; }
 
-  if(content){
-    if(fontScale === 1){
-      content.style.zoom            = '';
-      content.style.width           = '';
-      content.style.transformOrigin = '';
-    } else {
-      // zoom enlarges the element; shrink its logical width so it still
-      // fits the physical viewport (e.g. zoom:1.5 → width:66.7%)
-      content.style.zoom            = fontScale;
-      content.style.width           = Math.round(100 / fontScale) + '%';
-      content.style.transformOrigin = 'top left';
-    }
-  }
+  // Apply zoom via CSS class
+  el.classList.remove('font-lg','font-xl');
+  if(fontScale === 1.2) el.classList.add('font-lg');
+  else if(fontScale >= 1.5) el.classList.add('font-xl');
 
+  // Update button active state
   document.querySelectorAll('.font-btn').forEach(function(b){
     b.classList.toggle('active', parseFloat(b.dataset.scale) === fontScale);
   });
@@ -1453,6 +1518,49 @@ function saveApiKey(){
 }
 
 // ── Tab render ──
+
+// ══ Runtime state (depends on data.js constants) ══
+let hist = [...HISTORY];
+// Load cached fetch results if newer than built-in data
+try {
+  var _cached = JSON.parse(localStorage.getItem('ms_hist_cache') || 'null');
+  if (_cached && _cached.length > 0) {
+    // Merge: keep cached if it has newer entries
+    var _cachedNewest = _cached[0].draw;
+    var _builtinNewest = HISTORY[0].draw;
+    if (_cachedNewest > _builtinNewest) {
+      hist = _cached;
+    }
+  }
+} catch(e) {}
+let currentTab = 'latest';
+let theme = localStorage.getItem('ms_theme')||'fun';
+var fontScale=parseFloat(localStorage.getItem('ms_font')||'1');
+let alarmOn = false, alarmMins = 30, alarmFired = false;
+let userProfile = JSON.parse(localStorage.getItem('ms_profile')||'null');
+let prizeOn = false, prizeThr = 1e8, prizeShown = false;
+let curPrize = 8000000;
+let picked = [], checkResult = null;
+let sMode = 'hot';
+let wTab = 'birthday', wBday = '', wMbti = '', wSources = {golden:false,fib:false,gap:false,hot:false,cold:false};
+let wResult = null;
+let myBets = [], boardEntries = [];
+let betInput = [], betNote = '', betDraw = '', betMode = 'standard', pCount = 6, sureCt = 1;
+let pTab = 'math', mMethod = 'combined', mResult = null, aiResult = null;
+let heatMode = 'all';
+let showAddBet = false, showAddBoard = false;
+let boardName = '', boardPicks = [];
+let selPost = null;
+let pLoading = false, mLoading = false, wAiLoading = false;
+let showMathDetail = false;
+
+// Load saved data
+try { myBets = JSON.parse(localStorage.getItem('ms_bets')||'[]'); } catch {}
+try { boardEntries = JSON.parse(localStorage.getItem('ms_board')||'[]'); } catch {}
+
+// ── Utils ──
+
+// ══ Core UI: switchTab, render, renderLatest ══
 function switchTab(t){
  currentTab=t;
  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
@@ -1505,17 +1613,17 @@ function render(){
 function renderLatest(){
  var l=hist[0],nd=calcNextDraw();
  var out='';
- out+='<div class="card accent-top" style="text-align:center;background:linear-gradient(160deg,#080818,#0e0828,#080818);border-color:rgba(255,46,99,.4);">';
+ out+='<div class="card accent-top" style="text-align:center;background:var(--card);border:1px solid var(--accent);">';
   out+='<div style="font-size:9px;color:var(--dim);letter-spacing:3px;margin-bottom:6px">第 '+l.draw+' 期　'+l.date+'</div>';
   out+='<div style="font-size:11px;font-weight:900;color:var(--accent);letter-spacing:4px;margin-bottom:14px;text-shadow:0 0 14px rgba(255,46,99,.8)">本期開獎六正一特</div>';
-  out+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px 10px;background:rgba(0,0,0,.45);border-radius:12px;border:1px solid rgba(255,46,99,.15);margin-bottom:8px">';
+  out+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px 10px;background:var(--row);border-radius:12px;border:1px solid var(--accent-bg);margin-bottom:8px">';
   out+=ballsRow(l.numbers,l.extra,52);
   out+='</div>';
   out+='<div style="font-size:9px;color:var(--dim);letter-spacing:2px">六　正　碼　　＋　　特　別　號</div>';
   out+='</div>';
  out+='</div>';
 
- out+='<div class="card" style="background:linear-gradient(135deg,#0a0818,#0d0a22)">';
+ out+='<div class="card" style="background:var(--card)">';
  out+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
  out+='<div><div style="font-size:12px;color:var(--gold);font-weight:800">⏳ 下期 '+nd.drawNum+'</div>';
  out+='<div style="font-size:11px;color:var(--sub)">'+nd.date+' · 晚上 9:30</div></div>';
@@ -1527,13 +1635,13 @@ function renderLatest(){
 
  // Auto-refresh status indicator
  if(refreshLog.length>0){
- var logColor=refreshLog[0].startsWith('')?'#22cc66':refreshLog[0].startsWith('')?'#ff4444':'var(--sub)';
+ var logColor=refreshLog[0].startsWith('')?'var(--accent)':refreshLog[0].startsWith('')?'#cc0000':'var(--sub)';
  out+='<div style="font-size:10px;color:'+logColor+';text-align:center;margin-bottom:6px">'+refreshLog[0]+'</div>';
  }
  out+='<div style="font-size:10px;color:var(--dim);text-align:center;margin-bottom:10px;line-height:1.8">數據來源：lottery.hk · 本 App 與香港賽馬會無關聯<br/><span style="color:var(--accent);font-weight:700">純屬娛樂，請勿 all in </span></div>';
 
  // 打賞區
- out+='<div style="background:linear-gradient(135deg,#0c0820,#100c28);border:1px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
+ out+='<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;text-align:center">';
  out+='<div style="font-size:13px;font-weight:900;color:var(--gold2);margin-bottom:4px">☕ 支持開發者</div>';
  out+='<div style="font-size:10px;color:var(--sub);margin-bottom:10px">本應用程式完全免費，如認為有用，歡迎支持開發者持續維護。</div>';
  out+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
@@ -1566,7 +1674,7 @@ function renderLatest(){
 var W_METHODS=[
  {key:'golden',label:'黃金分割 φ',emoji:'',desc:'數學美感選號',color:'var(--gold)'},
  {key:'fib',label:'費氏數列 ∞',emoji:'',desc:'自然界神奇序列',color:'var(--sub)'},
- {key:'gap',label:'遺漏回歸 ↩',emoji:'',desc:'久未出現的號碼',color:'#22cc66'},
+ {key:'gap',label:'遺漏回歸 ↩',emoji:'',desc:'久未出現的號碼',color:'var(--accent)'},
  {key:'hot',label:'近期熱號 ',emoji:'',desc:'最近12期高頻',color:'#e53935'},
  {key:'cold',label:'久違冷號 ',emoji:'',desc:'很久沒出現的',color:'#1e88e5'},
 ];
@@ -1767,7 +1875,7 @@ function renderFortune(){
  var bdate=new Date(userProfile.date);
  var by=bdate.getFullYear(),bm=bdate.getMonth()+1,bd=bdate.getDate();
  var today=new Date();
- var scoreColor=f.score>=80?'#22cc66':f.score>=60?'var(--gold)':'#ff4444';
+ var scoreColor=f.score>=80?'var(--accent)':f.score>=60?'var(--gold)':'#cc0000';
 
  // ══ 1. 今日運勢總覽 ══
  out+='<div class="card accent-top" style="text-align:center;margin-bottom:10px">';
@@ -1785,7 +1893,7 @@ function renderFortune(){
  {k:'健康',e:'',s:Math.min(99,Math.max(30,f.score+Math.round(Math.cos(bd*0.6)*6)))}
  ];
  subScores.forEach(function(ss){
- var c2=ss.s>=75?'#22cc66':ss.s>=55?'var(--gold)':'#ff4444';
+ var c2=ss.s>=75?'var(--accent)':ss.s>=55?'var(--gold)':'#cc0000';
  out+='<div style="background:var(--row);border-radius:10px;padding:8px"><div style="font-size:14px">'+ss.e+'</div><div style="font-size:10px;color:var(--sub);margin:2px 0">'+ss.k+'</div><div style="font-size:13px;font-weight:900;color:'+c2+'">'+ss.s+'</div></div>';
  });
  out+='</div></div>';
@@ -2007,7 +2115,7 @@ function renderFortune(){
  ];
  out+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
  sajuA.forEach(function(a){
- var c=a.s>=75?'#22cc66':a.s>=55?'var(--gold)':'#ff4444';
+ var c=a.s>=75?'var(--accent)':a.s>=55?'var(--gold)':'#cc0000';
  out+='<div style="background:var(--row);border-radius:10px;padding:10px">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
  out+='<span style="font-size:11px">'+a.e+' <b>'+a.l+'</b></span><span style="font-size:14px;font-weight:900;color:'+c+'">'+a.s+'</span></div>';
@@ -2020,7 +2128,7 @@ function renderFortune(){
  var lucky7=calcLucky7Days();
  if(lucky7&&lucky7.length>0){
  var curMood=parseInt(localStorage.getItem('ms_mood')||'70');
- var moodColor=curMood>=75?'#22cc66':curMood>=55?'var(--gold)':'#ff4444';
+ var moodColor=curMood>=75?'var(--accent)':curMood>=55?'var(--gold)':'#cc0000';
  out+='<div class="card" style="margin-bottom:10px">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
  out+='<div><div style="font-size:14px;font-weight:900;color:var(--accent)">未來七日吉日推算</div>';
@@ -2029,7 +2137,7 @@ function renderFortune(){
  out+='<div style="font-size:9px;color:var(--dim)">人和分</div></div></div>';
  var medals7=['[一]','[二]','[三]'];
  lucky7.slice(0,3).forEach(function(day,i){
- var sc=day.total,scC=sc>=80?'#22cc66':sc>=60?'var(--gold)':'#ff4444';
+ var sc=day.total,scC=sc>=80?'var(--accent)':sc>=60?'var(--gold)':'#cc0000';
  out+='<div style="background:'+(i===0?'var(--accent-bg)':'var(--row)')+';border-radius:12px;padding:12px;margin-bottom:8px;border:'+(i===0?'1.5px solid var(--accent)':'none')+'">';
  out+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
  out+='<div style="font-size:14px;font-weight:900">'+medals7[i]+' '+day.dateStr+' <span style="font-size:11px;color:var(--sub)">'+day.ganzhi+'</span></div>';
@@ -2320,7 +2428,7 @@ function renderChecker(){
  out+=grid49(picked,'togglePick',picked.length>=6);
  out+='<div style="display:flex;gap:9px"><button class="btn btn-primary" style="flex:1" onclick="doCheck()">對獎！</button><button class="btn btn-ghost" onclick="picked=[];checkResult=null;render()">清除</button></div></div>';
  if(checkResult){
- out+='<div class="card" style="text-align:center;background:'+(checkResult.win?'#e8f5e9':'var(--card)')+'"><div style="font-size:26px;font-weight:900;color:'+(checkResult.win?'#22cc66':'var(--sub)')+';margin-bottom:6px">'+checkResult.prize+'</div>';
+ out+='<div class="card" style="text-align:center;background:'+(checkResult.win?'#e8f5e9':'var(--card)')+'"><div style="font-size:26px;font-weight:900;color:'+(checkResult.win?'var(--accent)':'var(--sub)')+';margin-bottom:6px">'+checkResult.prize+'</div>';
  out+='<div style="font-size:12px;color:var(--sub);margin-bottom:10px">命中 '+checkResult.matched.length+' 個正碼'+(checkResult.xHit?' + 特別號 ':'')+'</div>';
  if(checkResult.matched.length>0||checkResult.xHit){out+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">';for(var i=0;i<checkResult.matched.length;i++) out+=ball(checkResult.matched[i],38);if(checkResult.xHit) out+=ball(l.extra,38,true);out+='</div>';}
  out+='</div>';
@@ -2372,7 +2480,7 @@ function renderMyBets(){
  out+='<div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
  out+='<div><span style="font-size:12px;color:var(--accent);font-weight:800">'+b.draw+'</span><span style="font-size:10px;color:var(--dim);margin-left:8px">'+b.date+'</span></div>';
  out+='<div style="display:flex;gap:6px;align-items:center">';
- if(hDraw) out+='<span style="font-size:11px;font-weight:800;color:'+(won?'#22cc66':'#ff4444')+';background:'+(won?'#e8f5e9':'#ffebee')+';padding:2px 8px;border-radius:20px">'+pn+'</span>';
+ if(hDraw) out+='<span style="font-size:11px;font-weight:800;color:'+(won?'var(--accent)':'#cc0000')+';background:'+(won?'#e8f5e9':'#ffebee')+';padding:2px 8px;border-radius:20px">'+pn+'</span>';
  else out+='<span style="font-size:10px;color:var(--dim)">⏳ 待開獎</span>';
  out+='<button onclick="deleteBet('+b.id+')" style="border:none;background:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0"></button></div></div>';
  out+='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
@@ -2488,12 +2596,12 @@ function renderAIPredict(){
  for(var i=0;i<bmodes.length;i++) out+='<button class="pill '+(betMode===bmodes[i][0]?'active':'')+'" onclick="betMode=\''+bmodes[i][0]+'\';if(betMode!==\'standard\'&&pCount<7)pCount=7;render()" style="'+(betMode===bmodes[i][0]?'border-color:#6a1b9a;background:#f3e5f5;color:#6a1b9a':'')+'">'+bmodes[i][1]+'</button>';
  out+='</div>';
  if(betMode!=='standard'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';for(var n=7;n<=12;n++) out+='<button onclick="pCount='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(pCount===n?'#6a1b9a':'var(--border)')+';background:'+(pCount===n?'#f3e5f5':'var(--card)')+';color:'+(pCount===n?'#6a1b9a':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
- if(betMode==='bravery'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';for(var n=1;n<=Math.min(5,pCount-1);n++) out+='<button onclick="sureCt='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(sureCt===n?'#22cc66':'var(--border)')+';background:'+(sureCt===n?'#e8f5e9':'var(--card)')+';color:'+(sureCt===n?'#22cc66':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
+ if(betMode==='bravery'){out+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';for(var n=1;n<=Math.min(5,pCount-1);n++) out+='<button onclick="sureCt='+n+';render()" style="width:42px;height:42px;border-radius:11px;border:2px solid '+(sureCt===n?'var(--accent)':'var(--border)')+';background:'+(sureCt===n?'#e8f5e9':'var(--card)')+';color:'+(sureCt===n?'var(--accent)':'var(--sub)')+';font-weight:800;font-size:15px;cursor:pointer">'+n+'</button>';out+='</div>';}
  out+='<div style="background:var(--row);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--sub)">'+(betMode==='standard'?'普通一注':betMode==='combination'?'C('+pCount+',6)='+comb(pCount,6)+'注':'膽'+sureCt+'拖'+dc)+'</div><div style="text-align:right"><div style="font-size:18px;font-weight:900;color:var(--gold2)">HK$'+(tickets*10).toLocaleString()+'</div><div style="font-size:9px;color:var(--dim)">'+tickets+'注×$10</div></div></div>';
  out+='<button class="btn btn-purple btn-full" onclick="doAI()" '+(pLoading?'disabled':'')+'>'+(pLoading?' AI 分析中...':' 生成號碼建議')+'</button></div>';
  if(aiResult){
  if(aiResult.error) out+='<div class="card" style="text-align:center"><span style="color:#c62828;font-weight:700">生成失敗，請重試</span></div>';
- else if(aiResult.type==='bravery'){out+='<div class="result-card"><div style="margin-bottom:12px"><div style="font-size:11px;color:#2e7d32;font-weight:800;margin-bottom:6px">膽碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.sure.length;i++) out+=ball(aiResult.sure[i],46,false,false,true,'#22cc66');out+='</div></div><div style="margin-bottom:12px"><div style="font-size:11px;color:var(--gold2);font-weight:800;margin-bottom:6px">拖碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.drag.length;i++) out+=ball(aiResult.drag[i],46,false,false,true,'var(--gold2)');out+='</div></div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
+ else if(aiResult.type==='bravery'){out+='<div class="result-card"><div style="margin-bottom:12px"><div style="font-size:11px;color:#2e7d32;font-weight:800;margin-bottom:6px">膽碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.sure.length;i++) out+=ball(aiResult.sure[i],46,false,false,true,'var(--accent)');out+='</div></div><div style="margin-bottom:12px"><div style="font-size:11px;color:var(--gold2);font-weight:800;margin-bottom:6px">拖碼</div><div style="display:flex;gap:6px;flex-wrap:wrap">';for(var i=0;i<aiResult.drag.length;i++) out+=ball(aiResult.drag[i],46,false,false,true,'var(--gold2)');out+='</div></div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
  else{out+='<div class="result-card"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">'+ballsRow(aiResult.numbers,aiResult.extra,48)+'</div><div style="background:var(--row);border-radius:10px;padding:12px;font-size:12px;line-height:1.8">'+aiResult.analysis+'</div></div>';}
  }
  return out;
@@ -2586,50 +2694,35 @@ function initDisqus(){
  document.head.appendChild(s);
  }catch(e){}
 }
-// ── Init ──
-window.onerror = function(msg, src, line, col, err) {
- const c = document.getElementById('content');
- if(c) c.innerHTML = '<div style="padding:20px;background:#ffebee;border-radius:12px;color:#c62828;font-size:12px;line-height:2">' +
- '<strong>JS Error:</strong><br/>' + msg + '<br/>Line: ' + line + '<br/>' + (err?err.stack:'') + '</div>';
- return false;
-};
-try {
- updateHeader();
- initLucky();
- // Test: write directly to content first
-render();
-} catch(e) {
- const c = document.getElementById('content');
- if(c) c.innerHTML = '<div style="padding:20px;background:#ffebee;border-radius:12px;color:#c62828;font-size:12px;line-height:2">' +
- '<strong>Init Error:</strong><br/>' + e.message + '<br/>' + e.stack + '</div>';
-}
 
+// ── Global error handler ──
+window.onerror = function(msg, src, line, col, err) {
+  var c = document.getElementById('content');
+  if (c) c.innerHTML =
+    '<div style="padding:20px;background:#1a0010;border:1px solid #ff2e63;' +
+    'border-radius:12px;color:#ff6090;font-size:12px;line-height:2">' +
+    '<strong style="color:#ff2e63">系統異常</strong><br/>' +
+    msg + '<br/>行號: ' + line + '<br/>' +
+    (err ? '<pre style="font-size:10px;color:#8878c8;white-space:pre-wrap">' +
+     err.stack + '</pre>' : '') + '</div>';
+  return false;
+};
+
+// ── Startup (scripts load synchronously so DOM is ready) ──
+try {
+  updateHeader();
+  initLucky();
+  render();
+} catch (e) {
+  var c = document.getElementById('content');
+  if (c) c.innerHTML =
+    '<div style="padding:20px;background:#1a0010;border:1px solid #ff2e63;' +
+    'border-radius:12px;color:#ff6090;font-size:12px;line-height:2">' +
+    '<strong style="color:#ff2e63">初始化異常</strong><br/>' +
+    e.message + '<br/>' +
+    '<pre style="font-size:10px;color:#8878c8;white-space:pre-wrap">' +
+    e.stack + '</pre></div>';
+}
 </script>
-<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
- <div style="background:var(--card);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto">
- <div style="text-align:center;margin-bottom:16px">
- <div style="font-size:36px"></div>
- <div style="font-size:20px;font-weight:900;color:var(--accent)">歡迎使用六合常中</div>
- <div style="font-size:12px;color:var(--sub);margin-top:4px">輸入生日，獲取個人化運程分析</div>
- </div>
- <div style="margin-bottom:12px">
- <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">出生日期</div>
- <input type="date" id="ob-date" style="width:100%;box-sizing:border-box"/>
- </div>
- <div style="margin-bottom:12px">
- <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⏰ 出生時間（可選，更準確）</div>
- <input type="time" id="ob-time" placeholder="不知道可留空" style="width:100%;box-sizing:border-box"/>
- </div>
- <div style="margin-bottom:16px">
- <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚧ 性別（影響紫微斗數）</div>
- <div style="display:flex;gap:8px">
- <button id="ob-male" onclick="selectGender('male')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">男</button>
- <button id="ob-female" onclick="selectGender('female')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">女</button>
- </div>
- </div>
- <button onclick="saveProfile()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#ff6090);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:8px">開始使用</button>
- <button onclick="skipProfile()" style="width:100%;padding:10px;background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer">跳過（之後可在設定修改）</button>
- </div>
-</div>
 </body>
 </html>
