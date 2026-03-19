@@ -221,28 +221,35 @@ function setFont(scale){
  });
 }
 function applyFont(){
- var el=document.documentElement;
- // Remove all previous scaling
- el.style.transform='';
- el.style.transformOrigin='';
- el.style.width='';
- el.style.height='';
- document.body.style.zoom='';
- document.body.style.width='';
+  // Strategy: zoom only #content (the scrollable area).
+  // header / #tabs / #lucky-bar / FAB are position:sticky or fixed —
+  // they must stay outside the zoom so they don't jump or overlap.
+  var content = document.getElementById('content');
 
- if(fontScale!==1){
- // Scale from top-left; shrink the root element width/height inversely
- // so the viewport doesn't scroll horizontally
- var pct=Math.round(100/fontScale)+'%';
- el.style.transformOrigin='top left';
- el.style.transform='scale('+fontScale+')';
- el.style.width=pct;
- el.style.height=pct;
- }
+  // Always reset body/html transforms from any old approach
+  document.documentElement.style.transform = '';
+  document.documentElement.style.width     = '';
+  document.documentElement.style.height    = '';
+  document.body.style.zoom  = '';
+  document.body.style.width = '';
 
- document.querySelectorAll('.font-btn').forEach(function(b){
- b.classList.toggle('active', parseFloat(b.dataset.scale)===fontScale);
- });
+  if(content){
+    if(fontScale === 1){
+      content.style.zoom            = '';
+      content.style.width           = '';
+      content.style.transformOrigin = '';
+    } else {
+      // zoom enlarges the element; shrink its logical width so it still
+      // fits the physical viewport (e.g. zoom:1.5 → width:66.7%)
+      content.style.zoom            = fontScale;
+      content.style.width           = Math.round(100 / fontScale) + '%';
+      content.style.transformOrigin = 'top left';
+    }
+  }
+
+  document.querySelectorAll('.font-btn').forEach(function(b){
+    b.classList.toggle('active', parseFloat(b.dataset.scale) === fontScale);
+  });
 }
 
 // ── Lucky bar ──
