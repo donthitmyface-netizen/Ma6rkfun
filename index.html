@@ -11,23 +11,19 @@
   <meta name="apple-mobile-web-app-title" content="常中天機"/>
   <meta name="theme-color" content="#0a0a0f"/>
   <title>常中天機</title>
-
-  <!-- Styles -->
   <link rel="stylesheet" href="styles.css"/>
-
-  <!-- iztro (紫微斗數排盤) -->
   <script src="https://cdn.jsdelivr.net/npm/iztro/dist/iztro.min.js"></script>
 </head>
 <body>
 
-<!-- Toast notification -->
-<div id="toast"></div>
+<!-- Toast -->
+<div id="toast" class="toast-msg" style="display:none"></div>
 
-<!-- Confetti / particle burst -->
+<!-- Confetti -->
 <div id="confetti"></div>
 
-<!-- Settings Modal -->
-<div id="settings-modal">
+<!-- ══ Settings Modal ══ -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">
   <div class="modal-box">
     <div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:4px">API 金鑰配置</div>
     <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.9">選擇 AI 提供商並填入 API Key 啟用 AI 預測功能。</div>
@@ -50,12 +46,35 @@
   </div>
 </div>
 
-<!-- Onboarding / Birthday Modal (rendered by JS) -->
-<div id="onboarding-modal" id="ob-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">
-  <div class="modal-box" id="ob-box"></div>
+<!-- ══ Onboarding / Birthday Modal ══ -->
+<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
+ <div style="background:var(--card);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto">
+ <div style="text-align:center;margin-bottom:16px">
+ <div style="font-size:36px"></div>
+ <div style="font-size:20px;font-weight:900;color:var(--accent)">歡迎使用六合常中</div>
+ <div style="font-size:12px;color:var(--sub);margin-top:4px">輸入生日，獲取個人化運程分析</div>
+ </div>
+ <div style="margin-bottom:12px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">出生日期</div>
+ <input type="date" id="ob-date" style="width:100%;box-sizing:border-box"/>
+ </div>
+ <div style="margin-bottom:12px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⏰ 出生時間（可選，更準確）</div>
+ <input type="time" id="ob-time" placeholder="不知道可留空" style="width:100%;box-sizing:border-box"/>
+ </div>
+ <div style="margin-bottom:16px">
+ <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚧ 性別（影響紫微斗數）</div>
+ <div style="display:flex;gap:8px">
+ <button id="ob-male" onclick="selectGender('male')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">男</button>
+ <button id="ob-female" onclick="selectGender('female')" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--card);font-size:13px;cursor:pointer">女</button>
+ </div>
+ </div>
+ <button onclick="saveProfile()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#ff6090);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:8px">開始使用</button>
+ <button onclick="skipProfile()" style="width:100%;padding:10px;background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer">跳過（之後可在設定修改）</button>
+ </div>
 </div>
 
-<!-- Mood check modal (injected by showMoodCheck) -->
+<!-- ══ Mood check modal (injected by showMoodCheck()) ══ -->
 <div id="mood-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99998;align-items:center;justify-content:center;padding:16px"></div>
 
 <!-- ══ Header ══ -->
@@ -103,18 +122,18 @@
   <button class="tab-btn" data-tab="discuss">玄數社區</button>
 </div>
 
-<!-- ══ Main content area (filled by render()) ══ -->
+<!-- ══ Main content ══ -->
 <div id="content"></div>
 
-<!-- ══ Floating action button ══ -->
-<button id="fab" onclick="openSettings()" style="position:fixed;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#cc1840,#ff2e63);color:#fff;border:none;font-size:13px;font-weight:900;cursor:pointer;z-index:300;box-shadow:0 0 18px rgba(255,46,99,.6),0 4px 12px rgba(0,0,0,.5);letter-spacing:-.5px">設定</button>
+<!-- ══ FAB ══ -->
+<button id="fab" onclick="openSettings()" style="position:fixed;bottom:20px;right:16px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#cc1840,#ff2e63);color:#fff;border:none;font-size:11px;font-weight:900;cursor:pointer;z-index:300;box-shadow:0 0 18px rgba(255,46,99,.6),0 4px 12px rgba(0,0,0,.5);letter-spacing:-.5px">設定</button>
 
-<!-- ══ Scripts (load order matters) ══ -->
-<script src="data.js"    defer></script>
-<script src="utils.js"   defer></script>
-<script src="ui-core.js" defer></script>
-<script src="ui-tabs.js" defer></script>
-<script src="app.js"     defer></script>
+<!-- ══ Scripts — order is critical ══ -->
+<script src="data.js"></script>
+<script src="utils.js"></script>
+<script src="ui-core.js"></script>
+<script src="ui-tabs.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
