@@ -2,6 +2,18 @@
 
 // ══ Runtime state (depends on data.js constants) ══
 let hist = [...HISTORY];
+// Load cached fetch results if newer than built-in data
+try {
+  var _cached = JSON.parse(localStorage.getItem('ms_hist_cache') || 'null');
+  if (_cached && _cached.length > 0) {
+    // Merge: keep cached if it has newer entries
+    var _cachedNewest = _cached[0].draw;
+    var _builtinNewest = HISTORY[0].draw;
+    if (_cachedNewest > _builtinNewest) {
+      hist = _cached;
+    }
+  }
+} catch(e) {}
 let currentTab = 'latest';
 let theme = localStorage.getItem('ms_theme')||'fun';
 var fontScale=parseFloat(localStorage.getItem('ms_font')||'1');

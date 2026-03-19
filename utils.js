@@ -539,6 +539,7 @@ function doRefresh(){
  });
  if(!rows.length)throw new Error('無有效數據');
  hist=rows;
+ try { localStorage.setItem('ms_hist_cache', JSON.stringify(rows.slice(0,60))); } catch(e){}
  refreshLog=[' 更新成功！共 '+rows.length+' 期',
  '最新：'+rows[0].draw+' ('+rows[0].date+')',
  ' '+rows[0].numbers.join(', ')+' 特：'+rows[0].extra];

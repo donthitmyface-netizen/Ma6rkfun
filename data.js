@@ -8,7 +8,15 @@ const WORKER_URL = "https://ma6rkfun.donthitmyface.workers.dev";
 const DISQUS_SHORTNAME = "liu-he-chang-zhong";
 
 const HISTORY=[
- {draw:"26/021",date:"2026-02-24",numbers:[2,3,4,10,13,23],extra:12},
+ {draw:"26/029",date:"2026-03-17",numbers:[16,18,22,28,45,49],extra:13},
+ {draw:"26/028",date:"2026-03-12",numbers:[7,13,14,16,26,30],extra:34},
+ {draw:"26/027",date:"2026-03-10",numbers:[2,16,25,34,35,37],extra:49},
+ {draw:"26/026",date:"2026-03-07",numbers:[12,15,18,22,28,37],extra:31},
+ {draw:"26/025",date:"2026-03-05",numbers:[4,18,24,31,42,46],extra:11},
+ {draw:"26/024",date:"2026-03-03",numbers:[6,13,20,31,32,44],extra:45},
+ {draw:"26/023",date:"2026-02-28",numbers:[5,15,37,39,46,47],extra:29},
+ {draw:"26/022",date:"2026-02-26",numbers:[6,13,15,19,38,42],extra:34},
+  {draw:"26/021",date:"2026-02-24",numbers:[2,3,4,10,13,23],extra:12},
  {draw:"26/020",date:"2026-02-21",numbers:[2,18,34,35,37,49],extra:33},
  {draw:"26/019",date:"2026-02-15",numbers:[8,28,33,36,37,46],extra:4},
  {draw:"26/018",date:"2026-02-12",numbers:[2,3,14,25,37,46],extra:10},

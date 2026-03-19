@@ -75,6 +75,7 @@ button,input,select{font-family:inherit;}
 #header .title{flex:1;}
 #header .title h1{
   font-size:18px; font-weight:900; color:#fff; letter-spacing:3px;
+  white-space:nowrap;
   text-shadow:0 0 10px rgba(255,46,99,.9),0 0 28px rgba(255,46,99,.35);
   animation:neonFlicker 9s infinite;
 }
@@ -88,7 +89,7 @@ button,input,select{font-family:inherit;}
   background:rgba(255,46,99,.04);
 }
 
-.theme-btns{display:flex;gap:4px;flex-wrap:wrap;}
+.theme-btns{display:grid;grid-template-columns:repeat(3,28px);gap:4px;}
 .theme-btn{
   width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);
   background:var(--card);color:var(--sub);font-size:11px;font-weight:700;
@@ -339,6 +340,7 @@ body:not(.dark):not(.pastel) .card.accent-top{
 /* Header text strong neon on bright bg */
 body:not(.dark):not(.pastel) #header .title h1{
   color:#ffffff;
+  white-space:nowrap;
   text-shadow:0 0 8px rgba(255,0,64,1),0 0 20px rgba(255,0,64,.7),0 0 40px rgba(255,0,64,.4);
 }
 /* Tab bar on bright theme */
@@ -374,58 +376,136 @@ body:not(.dark):not(.pastel) input[type=number]{
   color:#0a0818;
 }
 
-/* ── 古 (pastel/sunlight) theme extra overrides ── */
+/* ── 古 (pastel/sunlight) theme — full white high-contrast overrides ── */
+body.pastel{
+  --bg:#ffffff; --card:#ffffff; --card2:#f5f5f5;
+  --border:#cccccc; --border2:#999999;
+  --text:#000000; --sub:#222222; --dim:#555555;
+  --accent:#cc0033; --accent2:#ee1144; --accent-bg:rgba(204,0,51,.06);
+  --track:#dddddd; --row:#f5f5f5;
+  --input:#ffffff; --iborder:#999999;
+  --tab:#ffffff; --header1:#000000; --header2:#1a0010;
+  --gold:#7a5a00; --gold2:#a07800;
+  --indigo:#f0f0f0; --indigo2:#111111;
+}
+/* Header: black bg, white text, zero glow */
 body.pastel #header{
-  background:linear-gradient(160deg,#000000 0%,#1a0010 55%,#000000 100%);
+  background:#000000;
   box-shadow:0 2px 8px rgba(0,0,0,.4);
+  border-bottom:2px solid #cc0033;
 }
 body.pastel #header::before,
 body.pastel #header::after{ display:none; }
 body.pastel #header .title h1{
-  color:#ffffff;
-  text-shadow:none;
-  animation:none;
+  color:#ffffff; text-shadow:none; animation:none; letter-spacing:2px;
 }
-body.pastel #header .title p{ color:rgba(255,255,255,.7); }
+body.pastel #header .title p{ color:rgba(255,255,255,.75); }
 body.pastel .header-icon{
-  border-color:#ffffff;
-  color:#ffffff;
-  box-shadow:none;
+  border:2px solid #ffffff; color:#ffffff; background:transparent; box-shadow:none;
 }
-body.pastel .theme-btn{ border-color:#bbbbbb; color:#333333; background:#f0f0f0; }
+/* Theme / font buttons */
+body.pastel .theme-btn{
+  border:1.5px solid #999999; color:#333333; background:#f0f0f0; box-shadow:none;
+}
 body.pastel .theme-btn.active,
-body.pastel .theme-btn:hover{ border-color:#cc0033; color:#cc0033; box-shadow:none; }
-body.pastel #tabs{ background:#ffffff; border-bottom:2px solid #cccccc; }
-body.pastel .tab-btn{ color:#666666; font-weight:800; }
-body.pastel .tab-btn.active{ color:#cc0033; border-bottom-color:#cc0033; text-shadow:none; }
-body.pastel #lucky-bar{ background:#f5f5f5; border-bottom:1px solid #cccccc; }
-body.pastel #lucky-bar span{ color:#cc0033; }
-body.pastel #lucky-fill{ background:#cc0033; animation:none; box-shadow:none; }
-body.pastel #lucky-pct{ color:#cc0033; }
-body.pastel #lucky-msg{ color:#333333; }
-body.pastel .card{
-  background:#ffffff;
-  border:1.5px solid #cccccc;
-  box-shadow:0 1px 6px rgba(0,0,0,.1);
+body.pastel .theme-btn:hover{
+  border-color:#cc0033; color:#cc0033; background:#fff0f3; box-shadow:none;
 }
-body.pastel .card.accent-top{ border-top:3px solid #cc0033; box-shadow:0 1px 6px rgba(0,0,0,.1); }
-body.pastel .card.accent-top::before{ background:none; }
-body.pastel .card::before{ background:none; }
-body.pastel .btn-primary{ background:#cc0033; box-shadow:none; }
-body.pastel .pill.active{ background:#cc0033; box-shadow:none; }
-body.pastel .w-tab.active{ background:#cc0033; box-shadow:none; }
-body.pastel .tab-btn.active{ text-shadow:none; }
+/* Lucky bar */
+body.pastel #lucky-bar{
+  background:#f5f5f5; border-bottom:1.5px solid #cccccc;
+}
+body.pastel #lucky-bar span,
+body.pastel #lucky-pct{ color:#cc0033; }
+body.pastel #lucky-msg,
+body.pastel #lucky-desc{ color:#000000; }
+body.pastel #lucky-fill{
+  background:#cc0033; animation:none; box-shadow:none;
+}
+body.pastel #lucky-track{ background:#dddddd; }
+/* Tabs */
+body.pastel #tabs{
+  background:#ffffff; border-bottom:1.5px solid #cccccc;
+}
+body.pastel .tab-btn{ color:#555555; font-weight:800; }
+body.pastel .tab-btn.active{
+  color:#cc0033; border-bottom-color:#cc0033; text-shadow:none; font-weight:900;
+}
+/* Cards: pure white, dark border, no glow */
+body.pastel .card{
+  background:#ffffff; border:1.5px solid #cccccc;
+  box-shadow:0 1px 4px rgba(0,0,0,.12); color:#000000;
+}
+body.pastel .card::before,
+body.pastel .card::after{ display:none; }
+body.pastel .card.accent-top{
+  border-top:3px solid #cc0033;
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+body.pastel .card.accent-top::before{ display:none; }
+body.pastel .card.gold-top{ border-top:3px solid #a07800; }
+/* Buttons */
+body.pastel .btn-primary{
+  background:#cc0033; box-shadow:none; border-color:#cc0033;
+}
+body.pastel .btn-primary:active{ background:#990022; }
+body.pastel .btn-ghost{ color:#333333; border-color:#999999; }
+body.pastel .btn-ghost:hover{ color:#cc0033; border-color:#cc0033; box-shadow:none; }
+/* Pills / Chips */
+body.pastel .pill{ border-color:#999999; color:#333333; background:#f5f5f5; }
+body.pastel .pill.active{ background:#cc0033; color:#ffffff; border-color:#cc0033; box-shadow:none; }
+/* Workshop tabs */
+body.pastel .w-tab{ background:#f0f0f0; color:#555555; }
+body.pastel .w-tab.active{ background:#cc0033; color:#ffffff; box-shadow:none; }
+/* Method cards */
+body.pastel .method-card{ background:#f5f5f5; border-color:#cccccc; }
+body.pastel .method-card.selected,
+body.pastel .method-card:hover{ border-color:#cc0033; background:#fff0f3; box-shadow:none; }
+/* Heatmap cells */
+body.pastel .heat-cell{ border-color:rgba(0,0,0,.12); }
+body.pastel .heat-cell:hover{ border-color:#cc0033; box-shadow:none; }
+/* Countdown */
 body.pastel #countdown{ color:#cc0033; text-shadow:none; }
+/* Inputs */
 body.pastel input[type=text],
 body.pastel input[type=password],
 body.pastel input[type=date],
 body.pastel input[type=time],
 body.pastel input[type=number]{
-  border:1.5px solid #aaaaaa;
-  background:#ffffff;
-  color:#000000;
+  border:1.5px solid #999999; background:#ffffff; color:#000000;
 }
 body.pastel input:focus{ border-color:#cc0033; box-shadow:none; }
+/* Sub tabs */
+body.pastel .sub-tabs{ background:#f0f0f0; }
+body.pastel .sub-tab{ color:#555555; }
+body.pastel .sub-tab.active{ background:#ffffff; color:#cc0033; box-shadow:none; }
+/* Stat bar */
+body.pastel .sbar-fill{ background:#cc0033; }
+body.pastel .sbar-track{ background:#dddddd; }
+/* Step label */
+body.pastel .step-label{ color:#cc0033; border-bottom-color:#cccccc; }
+/* Post cards */
+body.pastel .post-card{ background:#f5f5f5; border-color:#cccccc; }
+body.pastel .post-title{ color:#000000; }
+/* FAB */
+body.pastel #fab{
+  background:#cc0033 !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.3) !important;
+}
+/* Pick balls */
+body.pastel .pick-ball{ background:#f5f5f5; border-color:#cccccc; color:#555555; }
+body.pastel .pick-ball.picked{
+  background:#fff0f3; border-color:#cc0033; color:#cc0033; box-shadow:none;
+}
+/* MBTI buttons */
+body.pastel .mbti-btn{ background:#f0f0f0; border-color:#cccccc; color:#333333; }
+body.pastel .mbti-btn.active{ border-color:#cc0033; background:#fff0f3; color:#cc0033; }
+body.pastel .mbti-btn .mb-name{ color:#000000; }
+body.pastel .mbti-btn.active .mb-name{ color:#cc0033; }
+/* lucky fill animation off */
+body.pastel #lucky-fill{ animation:none !important; }
+
+
 /* Ball colours in sunlight mode — strong contrast */
 body.pastel .heat-cell:hover{ border-color:#cc0033; }
 
